@@ -8,7 +8,6 @@ is traced in W&B Weave, logged as W&B metrics, and journaled for later outcome s
 
 > ⚠️ Research/demo project on **paper trading** only. It is not investment advice and
 > has no proven track record — see [Limitations](#limitations).
-[View my PDF Document](SenseAI Architecture.pdf)
 ---
 
 ## How it works (high level)
