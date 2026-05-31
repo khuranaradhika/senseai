@@ -1,0 +1,56 @@
+_wandb:
+    value:
+        cli_version: 0.27.0
+        e:
+            gwj2lficre8fzahiwuxk2sb2n4isha5n:
+                apple:
+                    ecpuCores: 4
+                    gpuCores: 16
+                    macModel: Mac16,8
+                    memoryGb: 24
+                    name: Apple M4 Pro
+                    pcpuCores: 8
+                    ramTotalBytes: "25769803776"
+                    swapTotalBytes: "5368709120"
+                codePath: main.py
+                codePathLocal: main.py
+                cpu_count: 12
+                cpu_count_logical: 12
+                disk:
+                    /:
+                        total: "494384795648"
+                        used: "385161756672"
+                email: mail.radhikakhurana@gmail.com
+                executable: /Users/khuranaradhika/senseai/.venv/bin/python
+                git:
+                    commit: a11e368757fba1d990fed23e440deec1cc147964
+                    remote: https://github.com/khuranaradhika/senseai.git
+                host: Radhikas-MacBook-Pro.local
+                memory:
+                    total: "25769803776"
+                os: macOS-26.3-arm64-arm-64bit-Mach-O
+                program: /Users/khuranaradhika/senseai/main.py
+                python: CPython 3.13.12
+                root: /Users/khuranaradhika/senseai
+                startedAt: "2026-05-31T18:22:57.404826Z"
+                writerId: gwj2lficre8fzahiwuxk2sb2n4isha5n
+        m: []
+        python_version: 3.13.12
+        t:
+            "3":
+                - 2
+                - 16
+            "4": 3.13.12
+            "5": 0.27.0
+            "12": 0.27.0
+            "13": darwin-arm64
+consensus_threshold:
+    value: 3
+fast_model:
+    value: deepseek-ai/DeepSeek-V4-Flash
+max_debate_rounds:
+    value: 2
+max_position_usd:
+    value: 1000
+smart_model:
+    value: deepseek-ai/DeepSeek-V4-Pro

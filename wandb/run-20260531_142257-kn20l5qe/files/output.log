@@ -1,0 +1,156 @@
+[34m[1mwandb[0m: Initializing weave.
+[2K[?25h
+[36m[1mweave[0m: Logged in as Weights & Biases user: khuranaradhika.
+[36m[1mweave[0m: View Weave data at https://wandb.ai/khuranaradhika-northeastern-university/investment-committee/weave
+Running committee for NVDA...
+
+============================================================
+  INVESTMENT COMMITTEE: NVDA
+  Query: Should we take a long position given AI capex supercycle thesis?
+============================================================
+
+[1/6] Fetching market data...
+[36m[1mweave[0m: 🍩 https://wandb.ai/khuranaradhika-northeastern-university/investment-committee/r/call/019e7f46-642b-73b9-b7ee-73cca3f1268f
+  NVDA is trading at $211.14 (down 1.5% today). 52-week range: $135.40 - $236.54. Market cap: $5114.0B. P/E: 32.383434. RSI: 46.3. MACD: bearish.
+
+[2/6] Round 1 — Initial positions (parallel)...
+[36m[1mweave[0m: 🍩 https://wandb.ai/khuranaradhika-northeastern-university/investment-committee/r/call/019e7f46-6c49-7e6c-af60-6bb6b5d59993
+[36m[1mweave[0m: 🍩 https://wandb.ai/khuranaradhika-northeastern-university/investment-committee/r/call/019e7f46-6c4a-706c-bbf8-b77cb0420eba
+[36m[1mweave[0m: 🍩 https://wandb.ai/khuranaradhika-northeastern-university/investment-committee/r/call/019e7f46-6c4b-71fa-a253-5b8a32b84104
+[36m[1mweave[0m: 🍩 https://wandb.ai/khuranaradhika-northeastern-university/investment-committee/r/call/019e7f46-6c51-7ff3-8a60-db8b4b334d96
+  Bull Analyst: BUY (85%) — NVDA is the core enabler of the AI capex supercycle, with hyperscalers and enter...
+  Bear Analyst: SELL (75%) — NVDA's extreme valuation at a P/E of 32.4 and $5.1T market cap already prices in...
+  Risk Manager: HOLD (70%) — NVDA's AI capex supercycle thesis is intact, but current valuation at a P/E of 3...
+  Macro Strategist: BUY (75%) — The macro environment in May 2026 remains supportive for NVDA given the ongoing ...
+
+[3/6] Round 2 — Rebuttals...
+[36m[1mweave[0m: 🍩 https://wandb.ai/khuranaradhika-northeastern-university/investment-committee/r/call/019e7f46-78a5-7e03-8f33-b2aa52454ba6
+[36m[1mweave[0m: 🍩 https://wandb.ai/khuranaradhika-northeastern-university/investment-committee/r/call/019e7f46-78a6-74e4-8f9f-0c58bd330557
+  Bull Analyst rebuttal: BUY — The bear's focus on a P/E of 32.4 ignores that NVDA's earnings are growing at tr...
+  Bear Analyst rebuttal: SELL — The bull's claim that the pullback is a 'compelling entry point' ignores that NV...
+
+[4/6] Tallying votes...
+  Vote breakdown: {'BUY': 2, 'SELL': 1, 'HOLD': 1}
+  ⚖ Split vote — Chair breaking tie...
+  Chair decision: BUY
+  Rationale: The AI capex supercycle is a structural, multi-year trend that directly benefits NVDA as the primary enabler, and the current pullback offers a better entry point for long-term investors. While near-term technicals and valuation concerns are valid, the PEG ratio remains compelling given triple-digit earnings growth, and macro conditions remain supportive. The risk/reward is acceptable for a measured long position, acknowledging that further volatility is possible.
+  Proposed position: $600.00
+
+[5/6] Compliance check...
+  ✓ APPROVED: Position size of $600 is within the $1000 max limit. Average committee confidence of 0.78 exceeds the minimum threshold of 0.6. The chair's rationale addresses near-term risks while supporting a measured long position, and the vote breakdown (2 BUY, 1 SELL, 1 HOLD) does not indicate a critical compliance breach. No adjustment required.
+
+[6/6] Execution...
+  Could not verify account: 401 Client Error: Unauthorized for url: https://paper-api.alpaca.markets/v2/account
+  ✗ Trade failed: {"message": "unauthorized."}
+
+
+============================================================
+  COMMITTEE COMPLETE
+  Decision: BUY | Size: $600.00
+  Executed: False
+============================================================
+
+
+────────────────────────────────────────
+W&B logged for NVDA
+────────────────────────────────────────
+
+Running committee for TSLA...
+
+============================================================
+  INVESTMENT COMMITTEE: TSLA
+  Query: Is Tesla a buy after recent price action and macro headwinds?
+============================================================
+
+[1/6] Fetching market data...
+[36m[1mweave[0m: 🍩 https://wandb.ai/khuranaradhika-northeastern-university/investment-committee/r/call/019e7f46-9c3b-75ba-8517-95c6fbbfb697
+[36m[1mweave[0m: 🍩 https://wandb.ai/khuranaradhika-northeastern-university/investment-committee/r/call/019e7f46-9c38-7cf7-a081-8cb43819f959
+  TSLA is trading at $435.79 (down 1.4% today). 52-week range: $273.21 - $498.83. Market cap: $1636.7B. P/E: 399.80734. RSI: 53.0. MACD: bullish.
+
+[2/6] Round 1 — Initial positions (parallel)...
+[36m[1mweave[0m: 🍩 https://wandb.ai/khuranaradhika-northeastern-university/investment-committee/r/call/019e7f46-9f69-763d-aa5e-1659e200f1fe
+[36m[1mweave[0m: 🍩 https://wandb.ai/khuranaradhika-northeastern-university/investment-committee/r/call/019e7f46-9f68-752c-95fa-d03680694cb6
+[36m[1mweave[0m: 🍩 https://wandb.ai/khuranaradhika-northeastern-university/investment-committee/r/call/019e7f46-9f6a-7a30-96d4-ea18b13f20b8
+[36m[1mweave[0m: 🍩 https://wandb.ai/khuranaradhika-northeastern-university/investment-committee/r/call/019e7f46-9f6a-74f8-a4a1-2cc15cd66ccd
+  Bull Analyst: BUY (75%) — Tesla remains a compelling buy despite recent price dips and macro headwinds, as...
+  Bear Analyst: SELL (85%) — Tesla's astronomical P/E of nearly 400x earnings is unsustainable given macro he...
+  Risk Manager: SELL (85%) — Tesla's extreme valuation (P/E ~400) and macro headwinds (rising rates, EV deman...
+  Macro Strategist: HOLD (70%) — The macro environment in May 2026 is moderately supportive for TSLA. The Fed has...
+
+[3/6] Round 2 — Rebuttals...
+[36m[1mweave[0m: 🍩 https://wandb.ai/khuranaradhika-northeastern-university/investment-committee/r/call/019e7f46-ac44-74b9-809f-3958d26f1e7f
+[36m[1mweave[0m: 🍩 https://wandb.ai/khuranaradhika-northeastern-university/investment-committee/r/call/019e7f46-ac44-7d5e-a1da-ec7f4b94b12d
+  Bull Analyst rebuttal: BUY — The bear fixates on a trailing P/E that ignores Tesla's forward earnings power—a...
+  Bear Analyst rebuttal: SELL — The bull's argument ignores that Tesla's high P/E already prices in years of per...
+
+[4/6] Tallying votes...
+  Vote breakdown: {'BUY': 1, 'SELL': 2, 'HOLD': 1}
+  ⚖ Split vote — Chair breaking tie...
+  Chair decision: SELL
+  Rationale: The bear and risk manager arguments carry higher conviction (85%) and align on key risks: an unsustainable P/E of ~400, macro headwinds from rising rates and slowing EV demand, and unfavorable risk/reward after a 60% rally. The bull's growth narrative relies on aggressive forward estimates that are already priced in, while the macro strategist's neutral stance lacks conviction to offset the downside risks. Capital preservation is prudent until valuation resets or macro conditions improve.
+  Proposed position: $0.00
+
+[5/6] Compliance check...
+  ✓ APPROVED: The proposed position size is $0.00, which is within the maximum allowed position of $1000.00 and does not require capital deployment. The average committee confidence of 0.80 exceeds the minimum threshold of 0.6. The SELL decision aligns with the chair's rationale for capital preservation. No compliance issues detected.
+
+[6/6] Execution...
+  Could not verify account: 401 Client Error: Unauthorized for url: https://paper-api.alpaca.markets/v2/account
+  ✗ Trade failed: {"message": "unauthorized."}
+
+
+============================================================
+  COMMITTEE COMPLETE
+  Decision: SELL | Size: $0.00
+  Executed: False
+============================================================
+[36m[1mweave[0m: 🍩 https://wandb.ai/khuranaradhika-northeastern-university/investment-committee/r/call/019e7f46-cf36-7ebf-bf16-414816a1e355
+
+
+────────────────────────────────────────
+W&B logged for TSLA
+────────────────────────────────────────
+
+Running committee for AAPL...
+
+============================================================
+  INVESTMENT COMMITTEE: AAPL
+  Query: Should we hold or add to our Apple position?
+============================================================
+
+[1/6] Fetching market data...
+[36m[1mweave[0m: 🍩 https://wandb.ai/khuranaradhika-northeastern-university/investment-committee/r/call/019e7f46-cf39-718f-9fec-251079e930bd
+  AAPL is trading at $312.06 (down 0.1% today). 52-week range: $195.07 - $315.00. Market cap: $4583.3B. P/E: 37.733974. RSI: 84.3. MACD: bullish.
+
+[2/6] Round 1 — Initial positions (parallel)...
+[36m[1mweave[0m: 🍩 https://wandb.ai/khuranaradhika-northeastern-university/investment-committee/r/call/019e7f46-d27a-7fc8-af49-9c6c7d85fc02
+[36m[1mweave[0m: 🍩 https://wandb.ai/khuranaradhika-northeastern-university/investment-committee/r/call/019e7f46-d27a-7bd2-a642-b81d31951034
+[36m[1mweave[0m: 🍩 https://wandb.ai/khuranaradhika-northeastern-university/investment-committee/r/call/019e7f46-d27a-7de0-8ec7-02010284f7fb
+[36m[1mweave[0m: 🍩 https://wandb.ai/khuranaradhika-northeastern-university/investment-committee/r/call/019e7f46-d27b-7969-a697-6fc8a3508985
+  Bull Analyst: BUY (75%) — Apple's strong brand loyalty, expanding services revenue, and robust cash flows ...
+  Bear Analyst: SELL (85%) — Apple's stock is trading near its all-time high with an RSI of 84.3, indicating ...
+  Risk Manager: HOLD (70%) — Apple's stock is near its 52-week high with an elevated RSI of 84.3, indicating ...
+  Macro Strategist: HOLD (70%) — The macro environment in May 2026 is broadly supportive for large-cap tech like ...
+
+[3/6] Round 2 — Rebuttals...
+[36m[1mweave[0m: 🍩 https://wandb.ai/khuranaradhika-northeastern-university/investment-committee/r/call/019e7f46-de71-75a8-a2cd-31d1d11bc795
+[36m[1mweave[0m: 🍩 https://wandb.ai/khuranaradhika-northeastern-university/investment-committee/r/call/019e7f46-de72-7bcd-a8c4-cb04799b29f4
+  Bull Analyst rebuttal: BUY — The bear's overbought RSI argument ignores that Apple's RSI has stayed above 80 ...
+  Bear Analyst rebuttal: SELL — Brand loyalty and services revenue are real strengths, but they are already pric...
+
+[4/6] Tallying votes...
+  Vote breakdown: {'BUY': 1, 'SELL': 1, 'HOLD': 2}
+  ⚖ Split vote — Chair breaking tie...
+  Chair decision: HOLD
+  Rationale: The bull case for long-term ecosystem strength and services growth is compelling, but the extreme overbought RSI of 84.3 and elevated P/E of 37.7 create significant near-term correction risk, as flagged by the bear and risk manager. With the macro environment supportive but not aggressively bullish, maintaining current exposure balances upside potential against the probability of a pullback from all-time highs.
+  Proposed position: $0.00
+
+[5/6] Compliance check...
+  ✓ APPROVED: The final vote is HOLD with a proposed position size of $0.00, which does not trigger any position size or volatility limit violations. The average committee confidence of 0.78 exceeds the minimum threshold of 0.6, but no capital is being deployed, so no adjustment is required.
+
+[6/6] Execution...
+  Final vote is HOLD. No order placed.
+[36m[1mweave[0m: 🍩 https://wandb.ai/khuranaradhika-northeastern-university/investment-committee/r/call/019e7f46-fdc4-75af-b0c4-13abe78e23db
+
+────────────────────────────────────────
+W&B logged for AAPL
+────────────────────────────────────────

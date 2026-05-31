@@ -5,9 +5,17 @@ from dotenv import load_dotenv
 
 load_dotenv(override=True)
 
-ALPACA_BASE_URL = os.getenv("ALPACA_BASE_URL", "https://paper-api.alpaca.markets")
-ALPACA_API_KEY = os.getenv("ALPACA_API_KEY")
-ALPACA_SECRET_KEY = os.getenv("ALPACA_SECRET_KEY")
+# Accept Alpaca's standard APCA_* names (what .env uses) with ALPACA_* as fallback.
+ALPACA_API_KEY = os.getenv("APCA_API_KEY_ID") or os.getenv("ALPACA_API_KEY")
+ALPACA_SECRET_KEY = os.getenv("APCA_API_SECRET_KEY") or os.getenv("ALPACA_SECRET_KEY")
+# Normalize: endpoints below already include the /v2 prefix, so strip it (and any
+# trailing slash) if the configured base URL provides it.
+_raw_base = (
+    os.getenv("APCA_BASE_URL")
+    or os.getenv("ALPACA_BASE_URL")
+    or "https://paper-api.alpaca.markets"
+).rstrip("/")
+ALPACA_BASE_URL = _raw_base[:-3] if _raw_base.endswith("/v2") else _raw_base
 
 
 def _headers():
