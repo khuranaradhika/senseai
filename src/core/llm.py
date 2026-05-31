@@ -75,17 +75,6 @@ def call_llm(system: str, user: str, agent_name: str = "unknown", smart: bool = 
 
 
 @weave.op()
-def call_llm_structured(system: str, user: str, agent_name: str = "unknown", smart: bool = False) -> str:
-    """LLM call expecting JSON. Strips markdown fences."""
-    raw = call_llm(system=system, user=user, agent_name=agent_name, smart=smart)
-    clean = raw.strip()
-    if clean.startswith("```"):
-        lines = clean.split("\n")
-        clean = "\n".join(lines[1:-1]) if lines[-1].strip() == "```" else "\n".join(lines[1:])
-    return clean.strip()
-
-
-@weave.op()
 def call_typed(
     system: str,
     user: str,

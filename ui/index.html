@@ -395,15 +395,6 @@
     font-size: 10px;
   }
 
-  .round-tag {
-    font-size: 9px;
-    letter-spacing: 1px;
-    color: var(--muted);
-    text-transform: uppercase;
-    padding: 2px 8px;
-    border: 1px solid var(--border);
-    border-radius: 2px;
-  }
 
   /* Sidebar */
   .sidebar {
@@ -427,33 +418,6 @@
     margin-bottom: 14px;
   }
 
-  /* Vote tracker */
-  .vote-grid {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-  }
-
-  .vote-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-size: 11px;
-  }
-
-  .vote-name { color: var(--muted); }
-
-  .vote-indicator {
-    width: 60px;
-    text-align: right;
-    font-size: 10px;
-    font-weight: 700;
-    letter-spacing: 1px;
-  }
-  .vote-indicator.BUY { color: var(--accent); }
-  .vote-indicator.SELL { color: var(--accent2); }
-  .vote-indicator.HOLD { color: var(--accent3); }
-  .vote-indicator.pending { color: var(--border); }
 
   /* Verdict */
   .verdict-card {
@@ -571,24 +535,6 @@
     border-radius: 4px;
   }
   .empty-icon { font-size: 32px; margin-bottom: 12px; opacity: 0.3; }
-
-  /* Round divider */
-  .round-divider {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin: 14px 0 2px;
-    font-size: 10px;
-    letter-spacing: 2px;
-    color: var(--accent4);
-    text-transform: uppercase;
-  }
-  .round-divider::before, .round-divider::after {
-    content: '';
-    flex: 1;
-    height: 1px;
-    background: var(--border);
-  }
 
   /* Chair moderation card */
   .chair-card {

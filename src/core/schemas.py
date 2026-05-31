@@ -38,7 +38,6 @@ class AgentFinding:
     key_points: list[str]
     confidence: float  # 0.0 - 1.0
     vote: Vote
-    supporting_data: dict = field(default_factory=dict)
     rebuttal: Optional[str] = None  # populated in round 2
     round: int = 1
     changed_vote: bool = False  # did this agent change its vote vs its last round?
