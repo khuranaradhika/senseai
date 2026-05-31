@@ -9,5 +9,7 @@ ta
 fastapi
 uvicorn[standard]
 httpx
+pydantic
+pytest
 
 

@@ -11,14 +11,17 @@ load_dotenv(override=True)
 
 def main():
     # ── Init Weave + W&B ─────────────────────────────────────────────────────
+    from src.core.config import CONFIG, FAST_MODEL, SMART_MODEL
+
     weave.init("investment-committee")
     wandb.init(
         project="investment-committee",
         config={
-            "model": "claude-sonnet-4-20250514",
+            "fast_model": FAST_MODEL,
+            "smart_model": SMART_MODEL,
             "max_debate_rounds": 2,
             "consensus_threshold": 3,
-            "max_position_usd": 1000.0,
+            "max_position_usd": CONFIG.max_position_usd,
         }
     )
 

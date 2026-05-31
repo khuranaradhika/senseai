@@ -12,7 +12,7 @@ from src.agents.compliance_agent import compliance_agent
 
 
 @weave.op()
-def run_committee(query: str, ticker: str, config: CommitteeConfig = None) -> DebateState:
+def run_committee(query: str, ticker: str, config: CommitteeConfig = None, emit=None) -> DebateState:
     """
     Main orchestrator. Runs the full investment committee pipeline:
     1. Fetch market data
@@ -21,7 +21,14 @@ def run_committee(query: str, ticker: str, config: CommitteeConfig = None) -> De
     4. Vote tally → consensus or Chair tiebreak
     5. Compliance gate
     6. Alpaca execution (if approved)
+
+    `emit`, if provided, is called with dict events as each stage completes,
+    so a frontend (e.g. the SSE server) can stream the debate in real time.
     """
+    def _emit(event: dict):
+        if emit is not None:
+            emit(event)
+
     if config is None:
         config = CommitteeConfig(ticker=ticker)
 
@@ -33,11 +40,20 @@ def run_committee(query: str, ticker: str, config: CommitteeConfig = None) -> De
     print(f"  Query: {query}")
     print(f"{'='*60}")
     print("\n[1/6] Fetching market data...")
+    _emit({"type": "status", "message": "Fetching market data..."})
     state.market_data = fetch_market_data(ticker)
     print(f"  {state.market_data.summary}")
+    _emit({
+        "type": "market_data",
+        "price": state.market_data.current_price,
+        "change_pct": state.market_data.price_change_pct,
+        "rsi": state.market_data.rsi,
+        "macd": state.market_data.macd_signal,
+    })
 
     # ── Step 2: Round 1 — parallel specialist debate ─────────────────────────
     print("\n[2/6] Round 1 — Initial positions (parallel)...")
+    _emit({"type": "status", "message": "Round 1 — Initial positions..."})
     with concurrent.futures.ThreadPoolExecutor(max_workers=4) as executor:
         bull_future = executor.submit(bull_agent, ticker, query, state.market_data)
         bear_future = executor.submit(bear_agent, ticker, query, state.market_data)
@@ -53,9 +69,19 @@ def run_committee(query: str, ticker: str, config: CommitteeConfig = None) -> De
 
     for f in state.findings:
         print(f"  {f.agent_name}: {f.vote.value} ({f.confidence:.0%}) — {f.thesis[:80]}...")
+        _emit({
+            "type": "finding",
+            "round": 1,
+            "agent": f.agent_name,
+            "vote": f.vote.value,
+            "confidence": f.confidence,
+            "thesis": f.thesis,
+            "key_points": f.key_points,
+        })
 
     # ── Step 3: Round 2 — rebuttals (Bull vs Bear) ───────────────────────────
     print("\n[3/6] Round 2 — Rebuttals...")
+    _emit({"type": "status", "message": "Round 2 — Rebuttals..."})
     with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
         bull_r2_future = executor.submit(
             bull_agent, ticker, query, state.market_data, bear_r1.thesis
@@ -71,6 +97,15 @@ def run_committee(query: str, ticker: str, config: CommitteeConfig = None) -> De
 
     for r in state.rebuttals:
         print(f"  {r.agent_name} rebuttal: {r.vote.value} — {r.rebuttal[:80] if r.rebuttal else ''}...")
+        _emit({
+            "type": "finding",
+            "round": 2,
+            "agent": r.agent_name,
+            "vote": r.vote.value,
+            "confidence": r.confidence,
+            "thesis": r.rebuttal or r.thesis,
+            "key_points": r.key_points,
+        })
 
     # ── Step 4: Vote tally ────────────────────────────────────────────────────
     print("\n[4/6] Tallying votes...")
@@ -109,6 +144,12 @@ def run_committee(query: str, ticker: str, config: CommitteeConfig = None) -> De
 
     print(f"  Rationale: {state.chair_decision}")
     print(f"  Proposed position: ${state.position_size:.2f}")
+    _emit({
+        "type": "votes",
+        "final_vote": state.final_vote.value,
+        "position_size": state.position_size,
+        "chair_decision": state.chair_decision,
+    })
 
     # ── Step 5: Compliance gate ───────────────────────────────────────────────
     print("\n[5/6] Compliance check...")
@@ -118,18 +159,35 @@ def run_committee(query: str, ticker: str, config: CommitteeConfig = None) -> De
     state.position_size = adjusted_size
 
     print(f"  {'✓ APPROVED' if approved else '✗ BLOCKED'}: {compliance_reason}")
+    _emit({
+        "type": "compliance",
+        "approved": approved,
+        "reason": compliance_reason,
+        "position_size": state.position_size,
+    })
 
     # ── Step 6: Execute trade ─────────────────────────────────────────────────
     print("\n[6/6] Execution...")
 
+    def _emit_execution():
+        _emit({
+            "type": "execution",
+            "executed": state.trade_executed,
+            "final_vote": state.final_vote.value if state.final_vote else None,
+            "position_size": state.position_size,
+            "result": state.trade_result,
+        })
+
     if not approved:
         print(f"  Trade blocked by compliance. No order placed.")
         state.trade_executed = False
+        _emit_execution()
         return state
 
     if state.final_vote == Vote.HOLD:
         print(f"  Final vote is HOLD. No order placed.")
         state.trade_executed = False
+        _emit_execution()
         return state
 
     side = "buy" if state.final_vote == Vote.BUY else "sell"
@@ -141,6 +199,7 @@ def run_committee(query: str, ticker: str, config: CommitteeConfig = None) -> De
         if buying_power < state.position_size:
             print(f"  Insufficient buying power (${buying_power:.2f}). Skipping trade.")
             state.trade_executed = False
+            _emit_execution()
             return state
     except Exception as e:
         print(f"  Could not verify account: {e}")
@@ -160,6 +219,8 @@ def run_committee(query: str, ticker: str, config: CommitteeConfig = None) -> De
         print(f"  Order ID: {result.get('order_id')}")
     else:
         print(f"  ✗ Trade failed: {result.get('error')}")
+
+    _emit_execution()
 
     print(f"\n{'='*60}")
     print(f"  COMMITTEE COMPLETE")

@@ -66,3 +66,11 @@ def get_positions() -> list:
     r = requests.get(f"{ALPACA_BASE_URL}/v2/positions", headers=_headers())
     r.raise_for_status()
     return r.json()
+
+
+@weave.op()
+def get_clock() -> dict:
+    """Market clock — {'is_open': bool, 'next_open': ..., 'next_close': ...}."""
+    r = requests.get(f"{ALPACA_BASE_URL}/v2/clock", headers=_headers())
+    r.raise_for_status()
+    return r.json()
