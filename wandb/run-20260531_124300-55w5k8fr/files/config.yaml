@@ -1,0 +1,53 @@
+_wandb:
+    value:
+        cli_version: 0.27.0
+        e:
+            jxss4qs6vcgb1k3c037bjaz4mgmj3gi1:
+                apple:
+                    ecpuCores: 4
+                    gpuCores: 16
+                    macModel: Mac16,8
+                    memoryGb: 24
+                    name: Apple M4 Pro
+                    pcpuCores: 8
+                    ramTotalBytes: "25769803776"
+                    swapTotalBytes: "5368709120"
+                codePath: main.py
+                codePathLocal: main.py
+                cpu_count: 12
+                cpu_count_logical: 12
+                disk:
+                    /:
+                        total: "494384795648"
+                        used: "389748187136"
+                email: mail.radhikakhurana@gmail.com
+                executable: /Users/khuranaradhika/senseai/.venv/bin/python
+                git:
+                    commit: 97aaca965bb58dee01a0ba06c91cd5f49929daf6
+                    remote: https://github.com/khuranaradhika/senseai.git
+                host: Radhikas-MacBook-Pro.local
+                memory:
+                    total: "25769803776"
+                os: macOS-26.3-arm64-arm-64bit-Mach-O
+                program: /Users/khuranaradhika/senseai/main.py
+                python: CPython 3.13.12
+                root: /Users/khuranaradhika/senseai
+                startedAt: "2026-05-31T16:43:00.576732Z"
+                writerId: jxss4qs6vcgb1k3c037bjaz4mgmj3gi1
+        m: []
+        python_version: 3.13.12
+        t:
+            "3":
+                - 16
+            "4": 3.13.12
+            "5": 0.27.0
+            "12": 0.27.0
+            "13": darwin-arm64
+consensus_threshold:
+    value: 3
+max_debate_rounds:
+    value: 2
+max_position_usd:
+    value: 1000
+model:
+    value: claude-sonnet-4-20250514

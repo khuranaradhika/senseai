@@ -1,0 +1,83 @@
+[34m[1mwandb[0m: Initializing weave.
+[2K[?25h
+[36m[1mweave[0m: Logged in as Weights & Biases user: khuranaradhika.
+[36m[1mweave[0m: View Weave data at https://wandb.ai/khuranaradhika-northeastern-university/investment-committee/weave
+Running committee for NVDA...
+
+============================================================
+  INVESTMENT COMMITTEE: NVDA
+  Query: Should we take a long position given AI capex supercycle thesis?
+============================================================
+
+[1/6] Fetching market data...
+[36m[1mweave[0m: 🍩 https://wandb.ai/khuranaradhika-northeastern-university/investment-committee/r/call/019e7eea-e6b5-7ea5-b0d7-0ac6d6f9bd7e
+  NVDA is trading at $211.14 (down 1.5% today). 52-week range: $135.40 - $236.54. Market cap: $5114.0B. P/E: 32.383434. RSI: 46.3. MACD: bearish.
+
+[2/6] Round 1 — Initial positions (parallel)...
+[36m[1mweave[0m: 🍩 https://wandb.ai/khuranaradhika-northeastern-university/investment-committee/r/call/019e7eea-edc2-7ec2-95b5-25212c14a99c
+[36m[1mweave[0m: 🍩 https://wandb.ai/khuranaradhika-northeastern-university/investment-committee/r/call/019e7eea-edc2-7692-952a-3edb3b877fe5
+[36m[1mweave[0m: 🍩 https://wandb.ai/khuranaradhika-northeastern-university/investment-committee/r/call/019e7eea-edc2-7704-b3e6-a419b897c954
+[36m[1mweave[0m: 🍩 https://wandb.ai/khuranaradhika-northeastern-university/investment-committee/r/call/019e7eea-edc2-7f0e-852b-595849843482
+Traceback (most recent call last):
+  File "/Users/khuranaradhika/senseai/main.py", line 70, in <module>
+    main()
+    ~~~~^^
+  File "/Users/khuranaradhika/senseai/main.py", line 45, in main
+    state = run_committee(query=query, ticker=ticker, config=config)
+  File "/Users/khuranaradhika/senseai/.venv/lib/python3.13/site-packages/weave/trace/op.py", line 1309, in wrapper
+    res, _ = _call_sync_func(
+             ~~~~~~~~~~~~~~~^
+        cast(Op[P, R], wrapper), *args, __should_raise=True, **kwargs
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/Users/khuranaradhika/senseai/.venv/lib/python3.13/site-packages/weave/trace/op.py", line 559, in _call_sync_func
+    res = func(*args, **kwargs)
+  File "/Users/khuranaradhika/senseai/src/core/orchestrator.py", line 47, in run_committee
+    bull_r1 = bull_future.result()
+  File "/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/concurrent/futures/_base.py", line 456, in result
+    return self.__get_result()
+           ~~~~~~~~~~~~~~~~~^^
+  File "/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/concurrent/futures/_base.py", line 401, in __get_result
+    raise self._exception
+  File "/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/concurrent/futures/thread.py", line 59, in run
+    result = self.fn(*self.args, **self.kwargs)
+  File "/Users/khuranaradhika/senseai/.venv/lib/python3.13/site-packages/weave/trace/op.py", line 1309, in wrapper
+    res, _ = _call_sync_func(
+             ~~~~~~~~~~~~~~~^
+        cast(Op[P, R], wrapper), *args, __should_raise=True, **kwargs
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/Users/khuranaradhika/senseai/.venv/lib/python3.13/site-packages/weave/trace/op.py", line 559, in _call_sync_func
+    res = func(*args, **kwargs)
+  File "/Users/khuranaradhika/senseai/src/agents/bull_agent.py", line 59, in bull_agent
+    raw = call_llm_structured(system=system, user=user, agent_name="bull_agent")
+  File "/Users/khuranaradhika/senseai/.venv/lib/python3.13/site-packages/weave/trace/op.py", line 1309, in wrapper
+    res, _ = _call_sync_func(
+             ~~~~~~~~~~~~~~~^
+        cast(Op[P, R], wrapper), *args, __should_raise=True, **kwargs
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/Users/khuranaradhika/senseai/.venv/lib/python3.13/site-packages/weave/trace/op.py", line 559, in _call_sync_func
+    res = func(*args, **kwargs)
+  File "/Users/khuranaradhika/senseai/src/core/llm.py", line 54, in call_llm_structured
+    raw = call_llm(system=system, user=user, agent_name=agent_name, smart=smart)
+  File "/Users/khuranaradhika/senseai/.venv/lib/python3.13/site-packages/weave/trace/op.py", line 1309, in wrapper
+    res, _ = _call_sync_func(
+             ~~~~~~~~~~~~~~~^
+        cast(Op[P, R], wrapper), *args, __should_raise=True, **kwargs
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/Users/khuranaradhika/senseai/.venv/lib/python3.13/site-packages/weave/trace/op.py", line 559, in _call_sync_func
+    res = func(*args, **kwargs)
+  File "/Users/khuranaradhika/senseai/src/core/llm.py", line 48, in call_llm
+    return _call(model=model, system=system, user=user)
+  File "/Users/khuranaradhika/senseai/src/core/llm.py", line 36, in _call
+    r.raise_for_status()
+    ~~~~~~~~~~~~~~~~~~^^
+  File "/Users/khuranaradhika/senseai/.venv/lib/python3.13/site-packages/requests/models.py", line 1167, in raise_for_status
+    raise HTTPError(http_error_msg, response=self)
+requests.exceptions.HTTPError: 404 Client Error: Not Found for url: https://api.inference.wandb.ai/v1/chat/completions

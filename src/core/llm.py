@@ -6,11 +6,11 @@ from dotenv import load_dotenv
 load_dotenv(override=True)
 
 WANDB_API_KEY = os.getenv("WANDB_API_KEY")
-WANDB_BASE_URL = "https://api.inference.wandb.ai/v1"#"https://api.wandb.ai/inference/v1"
+WANDB_BASE_URL = "https://api.inference.wandb.ai/v1"
 
 # Two-tier model routing
-FAST_MODEL = "deepseek/deepseek-v4-flash"       # specialists: cheap + fast
-SMART_MODEL = "deepseek/deepseek-v4-0324"        # chair + compliance: best reasoning
+FAST_MODEL = "deepseek-ai/DeepSeek-V4-Flash"     # specialists: cheap + fast
+SMART_MODEL = "deepseek-ai/DeepSeek-V4-Pro"       # chair + compliance: best reasoning
 
 
 def _call(model: str, system: str, user: str) -> str:
