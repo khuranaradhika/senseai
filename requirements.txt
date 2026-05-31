@@ -1,0 +1,12 @@
+anthropic
+yfinance
+alpaca-trade-api
+wandb
+weave
+requests
+python-dotenv
+pandas
+ta
+fastapi
+uvicorn[standard]
+httpx

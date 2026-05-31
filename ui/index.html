@@ -1,0 +1,884 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Investment Committee — AI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #080a0f;
+    --surface: #0d1117;
+    --surface2: #131920;
+    --border: #1e2d3d;
+    --accent: #00ff88;
+    --accent2: #ff4444;
+    --accent3: #ffaa00;
+    --accent4: #4488ff;
+    --text: #e2e8f0;
+    --muted: #4a6380;
+    --mono: 'Space Mono', monospace;
+    --sans: 'Syne', sans-serif;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--mono);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Grid background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(0,255,136,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,255,136,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 40px 24px;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Header */
+  .header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 48px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .logo {
+    font-family: var(--sans);
+    font-weight: 800;
+    font-size: 22px;
+    letter-spacing: -0.5px;
+    color: var(--text);
+  }
+
+  .logo span {
+    color: var(--accent);
+  }
+
+  .badge {
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--muted);
+    margin-top: 4px;
+    text-transform: uppercase;
+  }
+
+  .status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--muted);
+    margin-top: 8px;
+    transition: background 0.3s;
+  }
+  .status-dot.active { background: var(--accent); box-shadow: 0 0 12px var(--accent); animation: pulse 1.5s infinite; }
+  .status-dot.done { background: var(--accent); box-shadow: 0 0 8px var(--accent); }
+  .status-dot.error { background: var(--accent2); }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  /* Input panel */
+  .input-panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 28px;
+    margin-bottom: 32px;
+  }
+
+  .input-label {
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+
+  .input-row {
+    display: grid;
+    grid-template-columns: 160px 1fr auto;
+    gap: 12px;
+    align-items: end;
+  }
+
+  .field { display: flex; flex-direction: column; gap: 8px; }
+
+  input[type="text"] {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 14px;
+    padding: 12px 16px;
+    border-radius: 3px;
+    outline: none;
+    transition: border-color 0.2s;
+    width: 100%;
+  }
+  input[type="text"]:focus { border-color: var(--accent); }
+  input[type="text"]::placeholder { color: var(--muted); }
+
+  .ticker-input { text-transform: uppercase; font-weight: 700; font-size: 18px; letter-spacing: 2px; }
+
+  .run-btn {
+    background: var(--accent);
+    color: var(--bg);
+    border: none;
+    font-family: var(--mono);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 12px 28px;
+    border-radius: 3px;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+  .run-btn:hover { background: #00cc6a; transform: translateY(-1px); }
+  .run-btn:disabled { background: var(--muted); cursor: not-allowed; transform: none; }
+
+  /* Market data strip */
+  .market-strip {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 16px 24px;
+    margin-bottom: 24px;
+    display: none;
+    animation: fadeIn 0.4s ease;
+  }
+  .market-strip.visible { display: flex; gap: 32px; align-items: center; flex-wrap: wrap; }
+
+  .market-item { display: flex; flex-direction: column; gap: 2px; }
+  .market-key { font-size: 9px; letter-spacing: 2px; color: var(--muted); text-transform: uppercase; }
+  .market-val { font-size: 16px; font-weight: 700; }
+  .up { color: var(--accent); }
+  .down { color: var(--accent2); }
+  .neutral { color: var(--accent3); }
+
+  /* Pipeline stages */
+  .pipeline {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    margin-bottom: 32px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+  }
+
+  .stage {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    flex-shrink: 0;
+  }
+
+  .stage-node {
+    padding: 8px 16px;
+    font-size: 10px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    color: var(--muted);
+    background: var(--surface);
+    transition: all 0.3s;
+    white-space: nowrap;
+  }
+  .stage-node.active { border-color: var(--accent); color: var(--accent); background: rgba(0,255,136,0.06); }
+  .stage-node.done { border-color: var(--accent); color: var(--accent); opacity: 0.6; }
+
+  .stage-arrow {
+    width: 24px;
+    height: 1px;
+    background: var(--border);
+    position: relative;
+  }
+  .stage-arrow::after {
+    content: '▶';
+    position: absolute;
+    right: -4px;
+    top: -6px;
+    font-size: 8px;
+    color: var(--border);
+  }
+
+  /* Main grid */
+  .main-grid {
+    display: grid;
+    grid-template-columns: 1fr 320px;
+    gap: 20px;
+  }
+
+  /* Debate feed */
+  .debate-feed {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .section-label {
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--muted);
+    text-transform: uppercase;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 4px;
+  }
+
+  .agent-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 18px 20px;
+    animation: slideIn 0.35s ease;
+    border-left: 3px solid transparent;
+  }
+  .agent-card.bull { border-left-color: var(--accent); }
+  .agent-card.bear { border-left-color: var(--accent2); }
+  .agent-card.risk { border-left-color: var(--accent3); }
+  .agent-card.macro { border-left-color: var(--accent4); }
+  .agent-card.chair { border-left-color: #aa44ff; }
+  .agent-card.compliance { border-left-color: var(--accent3); }
+
+  .agent-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+
+  .agent-name {
+    font-family: var(--sans);
+    font-weight: 700;
+    font-size: 13px;
+    letter-spacing: 0.5px;
+  }
+
+  .agent-meta {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  }
+
+  .vote-badge {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    padding: 3px 10px;
+    border-radius: 2px;
+  }
+  .vote-BUY { background: rgba(0,255,136,0.15); color: var(--accent); border: 1px solid rgba(0,255,136,0.3); }
+  .vote-SELL { background: rgba(255,68,68,0.15); color: var(--accent2); border: 1px solid rgba(255,68,68,0.3); }
+  .vote-HOLD { background: rgba(255,170,0,0.15); color: var(--accent3); border: 1px solid rgba(255,170,0,0.3); }
+
+  .confidence-bar {
+    width: 60px;
+    height: 3px;
+    background: var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .confidence-fill {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 2px;
+    transition: width 0.6s ease;
+  }
+
+  .agent-thesis {
+    font-size: 12px;
+    line-height: 1.7;
+    color: #94a3b8;
+    margin-bottom: 10px;
+  }
+
+  .key-points {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .key-points li {
+    font-size: 11px;
+    color: var(--muted);
+    padding-left: 16px;
+    position: relative;
+    line-height: 1.5;
+  }
+  .key-points li::before {
+    content: '→';
+    position: absolute;
+    left: 0;
+    color: var(--accent);
+    font-size: 10px;
+  }
+
+  .round-tag {
+    font-size: 9px;
+    letter-spacing: 1px;
+    color: var(--muted);
+    text-transform: uppercase;
+    padding: 2px 8px;
+    border: 1px solid var(--border);
+    border-radius: 2px;
+  }
+
+  /* Sidebar */
+  .sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .sidebar-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 18px;
+  }
+
+  .sidebar-title {
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 14px;
+  }
+
+  /* Vote tracker */
+  .vote-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .vote-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 11px;
+  }
+
+  .vote-name { color: var(--muted); }
+
+  .vote-indicator {
+    width: 60px;
+    text-align: right;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1px;
+  }
+  .vote-indicator.BUY { color: var(--accent); }
+  .vote-indicator.SELL { color: var(--accent2); }
+  .vote-indicator.HOLD { color: var(--accent3); }
+  .vote-indicator.pending { color: var(--border); }
+
+  /* Verdict */
+  .verdict-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 20px;
+    display: none;
+    animation: fadeIn 0.5s ease;
+  }
+  .verdict-card.visible { display: block; }
+
+  .verdict-main {
+    font-family: var(--sans);
+    font-size: 42px;
+    font-weight: 800;
+    letter-spacing: -1px;
+    line-height: 1;
+    margin-bottom: 6px;
+  }
+  .verdict-main.BUY { color: var(--accent); }
+  .verdict-main.SELL { color: var(--accent2); }
+  .verdict-main.HOLD { color: var(--accent3); }
+
+  .verdict-size {
+    font-size: 13px;
+    color: var(--muted);
+    margin-bottom: 14px;
+  }
+  .verdict-size span { color: var(--text); font-weight: 700; }
+
+  .verdict-rationale {
+    font-size: 11px;
+    line-height: 1.7;
+    color: #64748b;
+    border-top: 1px solid var(--border);
+    padding-top: 12px;
+  }
+
+  /* Trade execution */
+  .trade-card {
+    display: none;
+    animation: fadeIn 0.4s ease;
+  }
+  .trade-card.visible { display: block; }
+
+  .trade-executed {
+    background: rgba(0,255,136,0.08);
+    border: 1px solid rgba(0,255,136,0.3);
+    border-radius: 4px;
+    padding: 14px 18px;
+    font-size: 11px;
+  }
+
+  .trade-blocked {
+    background: rgba(255,68,68,0.08);
+    border: 1px solid rgba(255,68,68,0.3);
+    border-radius: 4px;
+    padding: 14px 18px;
+    font-size: 11px;
+  }
+
+  .trade-label {
+    font-size: 9px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+  .trade-executed .trade-label { color: var(--accent); }
+  .trade-blocked .trade-label { color: var(--accent2); }
+
+  .order-id {
+    font-size: 10px;
+    color: var(--muted);
+    margin-top: 6px;
+    word-break: break-all;
+  }
+
+  /* Log */
+  .log-feed {
+    font-size: 10px;
+    color: var(--muted);
+    line-height: 2;
+    max-height: 120px;
+    overflow-y: auto;
+  }
+  .log-line { display: flex; gap: 8px; }
+  .log-time { color: var(--border); flex-shrink: 0; }
+  .log-msg { color: var(--muted); }
+  .log-msg.highlight { color: var(--accent); }
+
+  /* Animations */
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateX(-12px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 4px; height: 4px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  /* Empty state */
+  .empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--muted);
+    font-size: 12px;
+    line-height: 2;
+    border: 1px dashed var(--border);
+    border-radius: 4px;
+  }
+  .empty-icon { font-size: 32px; margin-bottom: 12px; opacity: 0.3; }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Header -->
+  <div class="header">
+    <div>
+      <div class="logo">INVESTMENT <span>COMMITTEE</span></div>
+      <div class="badge">Multi-Agent Autonomous Trading System</div>
+    </div>
+    <div class="status-dot" id="statusDot"></div>
+  </div>
+
+  <!-- Input Panel -->
+  <div class="input-panel">
+    <div class="input-label">New Session</div>
+    <div class="input-row">
+      <div class="field">
+        <div class="input-label">Ticker</div>
+        <input type="text" id="tickerInput" class="ticker-input" placeholder="NVDA" value="NVDA" maxlength="6">
+      </div>
+      <div class="field">
+        <div class="input-label">Investment Query</div>
+        <input type="text" id="queryInput" placeholder="Should we take a long position given the AI capex supercycle thesis?" value="Should we take a long position given the AI capex supercycle thesis?">
+      </div>
+      <button class="run-btn" id="runBtn" onclick="runCommittee()">▶ CONVENE</button>
+    </div>
+  </div>
+
+  <!-- Market Strip -->
+  <div class="market-strip" id="marketStrip">
+    <div class="market-item">
+      <div class="market-key">Price</div>
+      <div class="market-val" id="mPrice">—</div>
+    </div>
+    <div class="market-item">
+      <div class="market-key">Change</div>
+      <div class="market-val" id="mChange">—</div>
+    </div>
+    <div class="market-item">
+      <div class="market-key">RSI</div>
+      <div class="market-val" id="mRsi">—</div>
+    </div>
+    <div class="market-item">
+      <div class="market-key">MACD</div>
+      <div class="market-val" id="mMacd">—</div>
+    </div>
+    <div class="market-item" style="margin-left:auto;">
+      <div class="market-key">Session</div>
+      <div class="market-val" id="mTicker" style="color:var(--accent)">—</div>
+    </div>
+  </div>
+
+  <!-- Pipeline -->
+  <div class="pipeline" id="pipeline">
+    <div class="stage">
+      <div class="stage-node" id="stage-market">Market Data</div>
+      <div class="stage-arrow"></div>
+    </div>
+    <div class="stage">
+      <div class="stage-node" id="stage-round1">Round 1</div>
+      <div class="stage-arrow"></div>
+    </div>
+    <div class="stage">
+      <div class="stage-node" id="stage-round2">Rebuttals</div>
+      <div class="stage-arrow"></div>
+    </div>
+    <div class="stage">
+      <div class="stage-node" id="stage-vote">Vote</div>
+      <div class="stage-arrow"></div>
+    </div>
+    <div class="stage">
+      <div class="stage-node" id="stage-compliance">Compliance</div>
+      <div class="stage-arrow"></div>
+    </div>
+    <div class="stage">
+      <div class="stage-node" id="stage-execute">Execute</div>
+    </div>
+  </div>
+
+  <!-- Main Grid -->
+  <div class="main-grid">
+
+    <!-- Debate Feed -->
+    <div>
+      <div class="section-label">Committee Debate</div>
+      <div class="debate-feed" id="debateFeed">
+        <div class="empty-state">
+          <div class="empty-icon">⬡</div>
+          Enter a ticker and query above to convene the committee.<br>
+          Agents will debate, vote, and execute a live paper trade.
+        </div>
+      </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="sidebar">
+
+      <!-- Vote Tracker -->
+      <div class="sidebar-card">
+        <div class="sidebar-title">Live Votes</div>
+        <div class="vote-grid">
+          <div class="vote-row">
+            <div class="vote-name">Bull Analyst</div>
+            <div class="vote-indicator pending" id="vote-Bull Analyst">—</div>
+          </div>
+          <div class="vote-row">
+            <div class="vote-name">Bear Analyst</div>
+            <div class="vote-indicator pending" id="vote-Bear Analyst">—</div>
+          </div>
+          <div class="vote-row">
+            <div class="vote-name">Risk Manager</div>
+            <div class="vote-indicator pending" id="vote-Risk Manager">—</div>
+          </div>
+          <div class="vote-row">
+            <div class="vote-name">Macro Strategist</div>
+            <div class="vote-indicator pending" id="vote-Macro Strategist">—</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Verdict -->
+      <div class="verdict-card" id="verdictCard">
+        <div class="sidebar-title">Committee Verdict</div>
+        <div class="verdict-main" id="verdictMain">—</div>
+        <div class="verdict-size">Position: <span id="verdictSize">—</span></div>
+        <div class="verdict-rationale" id="verdictRationale">—</div>
+      </div>
+
+      <!-- Trade -->
+      <div class="trade-card" id="tradeCard">
+        <div id="tradeInner"></div>
+      </div>
+
+      <!-- Log -->
+      <div class="sidebar-card">
+        <div class="sidebar-title">System Log</div>
+        <div class="log-feed" id="logFeed"></div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<script>
+  let eventSource = null;
+
+  const agentColorMap = {
+    'Bull Analyst': 'bull',
+    'Bear Analyst': 'bear',
+    'Risk Manager': 'risk',
+    'Macro Strategist': 'macro',
+    'Chair': 'chair',
+    'Compliance': 'compliance',
+  };
+
+  function log(msg, highlight = false) {
+    const feed = document.getElementById('logFeed');
+    const now = new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    const line = document.createElement('div');
+    line.className = 'log-line';
+    line.innerHTML = `<span class="log-time">${now}</span><span class="log-msg ${highlight ? 'highlight' : ''}">${msg}</span>`;
+    feed.appendChild(line);
+    feed.scrollTop = feed.scrollHeight;
+  }
+
+  function setStage(stage) {
+    // Mark all previous stages as done, current as active
+    const stages = ['market', 'round1', 'round2', 'vote', 'compliance', 'execute'];
+    const idx = stages.indexOf(stage);
+    stages.forEach((s, i) => {
+      const el = document.getElementById(`stage-${s}`);
+      if (i < idx) el.className = 'stage-node done';
+      else if (i === idx) el.className = 'stage-node active';
+      else el.className = 'stage-node';
+    });
+  }
+
+  function addAgentCard(data, round) {
+    const feed = document.getElementById('debateFeed');
+
+    // Remove empty state
+    const empty = feed.querySelector('.empty-state');
+    if (empty) empty.remove();
+
+    const colorClass = agentColorMap[data.agent] || 'macro';
+    const confidencePct = Math.round((data.confidence || 0) * 100);
+    const points = data.key_points
+      ? data.key_points.map(p => `<li>${p}</li>`).join('')
+      : '';
+
+    const card = document.createElement('div');
+    card.className = `agent-card ${colorClass}`;
+    card.innerHTML = `
+      <div class="agent-header">
+        <div class="agent-name">${data.agent}</div>
+        <div class="agent-meta">
+          <span class="round-tag">R${round}</span>
+          <div class="confidence-bar"><div class="confidence-fill" style="width:${confidencePct}%"></div></div>
+          <span style="font-size:10px;color:var(--muted)">${confidencePct}%</span>
+          <span class="vote-badge vote-${data.vote}">${data.vote}</span>
+        </div>
+      </div>
+      <div class="agent-thesis">${data.thesis}</div>
+      ${points ? `<ul class="key-points">${points}</ul>` : ''}
+    `;
+    feed.appendChild(card);
+
+    // Update vote tracker
+    const voteEl = document.getElementById(`vote-${data.agent}`);
+    if (voteEl) {
+      voteEl.textContent = data.vote;
+      voteEl.className = `vote-indicator ${data.vote}`;
+    }
+  }
+
+  function showVerdict(data) {
+    const card = document.getElementById('verdictCard');
+    const main = document.getElementById('verdictMain');
+    const size = document.getElementById('verdictSize');
+    const rationale = document.getElementById('verdictRationale');
+
+    main.textContent = data.final_vote || '—';
+    main.className = `verdict-main ${data.final_vote || ''}`;
+    size.textContent = data.position_size ? `$${data.position_size.toFixed(2)}` : '—';
+    rationale.textContent = data.chair_decision || '—';
+    card.classList.add('visible');
+  }
+
+  function showTrade(data) {
+    const card = document.getElementById('tradeCard');
+    const inner = document.getElementById('tradeInner');
+
+    if (data.executed) {
+      inner.innerHTML = `
+        <div class="trade-executed">
+          <div class="trade-label">✓ Trade Executed</div>
+          <div>${data.final_vote} $${(data.position_size || 0).toFixed(2)} of ${document.getElementById('tickerInput').value.toUpperCase()}</div>
+          ${data.result?.order_id ? `<div class="order-id">Order: ${data.result.order_id}</div>` : ''}
+        </div>
+      `;
+    } else {
+      inner.innerHTML = `
+        <div class="trade-blocked">
+          <div class="trade-label">⊘ No Trade</div>
+          <div>${data.final_vote === 'HOLD' ? 'Committee voted HOLD' : 'Blocked by compliance'}</div>
+        </div>
+      `;
+    }
+    card.classList.add('visible');
+  }
+
+  async function runCommittee() {
+    const ticker = document.getElementById('tickerInput').value.trim().toUpperCase() || 'NVDA';
+    const query = document.getElementById('queryInput').value.trim() || 'Should we take a position?';
+    const btn = document.getElementById('runBtn');
+    const dot = document.getElementById('statusDot');
+
+    // Reset UI
+    document.getElementById('debateFeed').innerHTML = '';
+    document.getElementById('verdictCard').classList.remove('visible');
+    document.getElementById('tradeCard').classList.remove('visible');
+    document.getElementById('marketStrip').classList.remove('visible');
+    document.getElementById('logFeed').innerHTML = '';
+    ['Bull Analyst','Bear Analyst','Risk Manager','Macro Strategist'].forEach(a => {
+      const el = document.getElementById(`vote-${a}`);
+      if (el) { el.textContent = '—'; el.className = 'vote-indicator pending'; }
+    });
+    // Reset pipeline
+    ['market','round1','round2','vote','compliance','execute'].forEach(s => {
+      document.getElementById(`stage-${s}`).className = 'stage-node';
+    });
+
+    btn.disabled = true;
+    btn.textContent = '◌ RUNNING';
+    dot.className = 'status-dot active';
+
+    if (eventSource) eventSource.close();
+
+    log(`Convening committee for ${ticker}...`, true);
+
+    const url = `/run?ticker=${encodeURIComponent(ticker)}&query=${encodeURIComponent(query)}`;
+    eventSource = new EventSource(url);
+
+    eventSource.onmessage = (e) => {
+      const msg = JSON.parse(e.data);
+
+      switch(msg.type) {
+        case 'status':
+          log(msg.message);
+          if (msg.message.includes('market')) setStage('market');
+          if (msg.message.includes('Round 1')) setStage('round1');
+          if (msg.message.includes('Round 2')) setStage('round2');
+          break;
+
+        case 'market_data':
+          const strip = document.getElementById('marketStrip');
+          strip.classList.add('visible');
+          document.getElementById('mPrice').textContent = `$${msg.price?.toFixed(2) || '—'}`;
+          const chg = msg.change_pct;
+          const chgEl = document.getElementById('mChange');
+          chgEl.textContent = `${chg >= 0 ? '+' : ''}${chg?.toFixed(2)}%`;
+          chgEl.className = `market-val ${chg >= 0 ? 'up' : 'down'}`;
+          const rsi = msg.rsi;
+          const rsiEl = document.getElementById('mRsi');
+          rsiEl.textContent = rsi ? rsi.toFixed(1) : '—';
+          rsiEl.className = `market-val ${rsi > 70 ? 'down' : rsi < 30 ? 'up' : 'neutral'}`;
+          document.getElementById('mMacd').textContent = msg.macd || '—';
+          document.getElementById('mMacd').className = `market-val ${msg.macd === 'bullish' ? 'up' : msg.macd === 'bearish' ? 'down' : 'neutral'}`;
+          document.getElementById('mTicker').textContent = ticker;
+          log(`Market data loaded — $${msg.price?.toFixed(2)}`);
+          break;
+
+        case 'finding':
+          if (msg.round === 1) setStage('round1');
+          if (msg.round === 2) setStage('round2');
+          addAgentCard(msg, msg.round);
+          log(`${msg.agent}: ${msg.vote} (${Math.round(msg.confidence * 100)}%)`);
+          break;
+
+        case 'votes':
+          setStage('vote');
+          showVerdict(msg);
+          log(`Committee verdict: ${msg.final_vote} — $${msg.position_size?.toFixed(2)}`, true);
+          break;
+
+        case 'compliance':
+          setStage('compliance');
+          log(`Compliance: ${msg.approved ? '✓ APPROVED' : '✗ BLOCKED'}`);
+          break;
+
+        case 'execution':
+          setStage('execute');
+          showTrade(msg);
+          log(msg.executed ? `✓ Trade executed: ${msg.final_vote} $${msg.position_size?.toFixed(2)}` : 'No trade placed', msg.executed);
+          break;
+
+        case 'complete':
+          dot.className = 'status-dot done';
+          btn.disabled = false;
+          btn.textContent = '▶ CONVENE';
+          log('Session complete.', true);
+          eventSource.close();
+          break;
+      }
+    };
+
+    eventSource.onerror = () => {
+      dot.className = 'status-dot error';
+      btn.disabled = false;
+      btn.textContent = '▶ CONVENE';
+      log('Connection error. Is the server running?');
+      eventSource.close();
+    };
+  }
+
+  // Enter key triggers run
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !document.getElementById('runBtn').disabled) {
+      runCommittee();
+    }
+  });
+</script>
+</body>
+</html>
