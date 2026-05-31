@@ -10,9 +10,9 @@ UserQuery
 [Market Data Fetch — yfinance]
     ↓
 Round 1: Parallel Debate
-  ┌─────────────────────────────────────────┐
+  ┌───────────────────────────────────────────────┐
   │  BullAgent  BearAgent  RiskAgent  MacroAgent  │
-  └─────────────────────────────────────────┘
+  └───────────────────────────────────────────────┘
     ↓
 Round 2: Rebuttals (Bull sees Bear, Bear sees Bull)
     ↓
