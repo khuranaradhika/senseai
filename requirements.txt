@@ -1,6 +1,6 @@
 anthropic
 yfinance
-alpaca-trade-api
+alpaca-py
 wandb
 weave
 requests

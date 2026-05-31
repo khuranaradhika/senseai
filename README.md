@@ -28,11 +28,16 @@ W&B + Weave full trace
 ## Setup
 
 ```bash
-pip install -r requirements.txt
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install --upgrade pip setuptools wheel
+python -m pip install -r requirements.txt
 cp .env.example .env
 # Fill in your API keys
 python main.py
 ```
+
+> Note: this project now uses `alpaca-py` instead of the legacy `alpaca-trade-api` package.
 
 ## API Keys needed
 - `ANTHROPIC_API_KEY`
