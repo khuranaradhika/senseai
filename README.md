@@ -10,7 +10,15 @@ is traced in W&B Weave, logged as W&B metrics, and journaled for later outcome s
 > has no proven track record — see [Limitations](#limitations).
 ---
 
+<details>
+<summary>🗺️ <b>Click to View SenseAI Architecture</b></summary>
 
+### System Architecture Document
+You can view or download the complete technical blueprint directly inside GitHub's native PDF viewer:
+
+👉 **[Open SenseAI Architecture.pdf](https://github.com/khuranaradhika/senseai/blob/main/SenseAI.pdf)**
+
+</details>
 
 ## How it works (high level)
 
