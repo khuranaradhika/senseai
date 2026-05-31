@@ -77,6 +77,7 @@ class DebateState:
     votes: dict[str, Vote] = field(default_factory=dict)
     chair_decision: Optional[str] = None
     final_vote: Optional[Vote] = None
+    conviction: Optional[float] = None  # chair's confidence in the final call
     position_size: Optional[float] = None
     trade_executed: bool = False
     trade_result: Optional[dict] = None

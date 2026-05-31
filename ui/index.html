@@ -648,11 +648,11 @@
     <div class="input-row">
       <div class="field">
         <div class="input-label">Ticker</div>
-        <input type="text" id="tickerInput" class="ticker-input" placeholder="NVDA" value="NVDA" maxlength="6">
+        <input type="text" id="tickerInput" class="ticker-input" placeholder="NVDA" maxlength="6">
       </div>
       <div class="field">
         <div class="input-label">Investment Query</div>
-        <input type="text" id="queryInput" placeholder="Should we take a long position given the AI capex supercycle thesis?" value="Should we take a long position given the AI capex supercycle thesis?">
+        <input type="text" id="queryInput" placeholder="Ask the committee… e.g. “Is NVDA a buy given the AI capex cycle?”">
       </div>
       <div class="field">
         <div class="input-label">Horizon</div>
@@ -697,11 +697,21 @@
     </div>
   </div>
 
-  <!-- Research (fundamentals + news) -->
+  <!-- Research (fundamentals / sector / macro / news) -->
   <div class="research-card" id="researchCard">
-    <div class="research-section">
-      <div class="research-head">Fundamentals</div>
-      <div class="research-fund" id="researchFund">—</div>
+    <div>
+      <div class="research-section">
+        <div class="research-head">Fundamentals</div>
+        <div class="research-fund" id="researchFund">—</div>
+      </div>
+      <div class="research-section" style="margin-top:14px">
+        <div class="research-head">Sector</div>
+        <div class="research-fund" id="researchSector">—</div>
+      </div>
+      <div class="research-section" style="margin-top:14px">
+        <div class="research-head">Macro</div>
+        <div class="research-fund" id="researchMacro">—</div>
+      </div>
     </div>
     <div class="research-section">
       <div class="research-head">Recent News</div>
@@ -931,6 +941,8 @@
 
   function showResearch(data) {
     document.getElementById('researchFund').textContent = data.fundamentals || '—';
+    document.getElementById('researchSector').textContent = data.sector || '—';
+    document.getElementById('researchMacro').textContent = data.macro || '—';
     const ul = document.getElementById('researchNews');
     ul.innerHTML = '';
     const news = data.news || [];
@@ -965,23 +977,48 @@
     card.classList.add('visible');
   }
 
+  const BLOCK_REASONS = {
+    hold: 'Committee voted HOLD',
+    compliance: 'Blocked by compliance officer',
+    broker_unreachable: 'Broker unreachable — blocked for safety',
+    confidence_gate: 'Blocked — conviction below threshold',
+    market_open: 'Blocked — market is closed',
+    daily_trade_cap: 'Blocked — daily trade limit reached',
+    no_conflicting_position: 'Blocked — conflicting open position',
+    sufficient_sizing: 'Blocked — insufficient buying power/size',
+    actionable_direction: 'No actionable trade',
+  };
+
+  function guardrailList(checks) {
+    if (!checks || !checks.length) return '';
+    const items = checks.map(c =>
+      `<li style="color:${c.passed ? 'var(--accent)' : 'var(--accent2)'}">
+        ${c.passed ? '✓' : '✗'} ${c.name}<span class="news-meta"> — ${c.detail}</span></li>`
+    ).join('');
+    return `<ul class="research-news" style="margin-top:10px">${items}</ul>`;
+  }
+
   function showTrade(data) {
     const card = document.getElementById('tradeCard');
     const inner = document.getElementById('tradeInner');
+    const guards = guardrailList(data.guardrails);
 
     if (data.executed) {
       inner.innerHTML = `
         <div class="trade-executed">
-          <div class="trade-label">✓ Trade Executed</div>
+          <div class="trade-label">✓ Trade Executed · passed all guardrails</div>
           <div>${data.final_vote} $${(data.position_size || 0).toFixed(2)} of ${document.getElementById('tickerInput').value.toUpperCase()}</div>
           ${data.result?.order_id ? `<div class="order-id">Order: ${data.result.order_id}</div>` : ''}
+          ${guards}
         </div>
       `;
     } else {
+      const reason = BLOCK_REASONS[data.blocked_by] || (data.blocked_by ? `Blocked — ${data.blocked_by}` : 'No trade');
       inner.innerHTML = `
         <div class="trade-blocked">
           <div class="trade-label">⊘ No Trade</div>
-          <div>${data.final_vote === 'HOLD' ? 'Committee voted HOLD' : 'Blocked by compliance'}</div>
+          <div>${reason}</div>
+          ${guards}
         </div>
       `;
     }
@@ -1093,7 +1130,7 @@
         case 'execution':
           setStage('execute');
           showTrade(msg);
-          log(msg.executed ? `✓ Trade executed: ${msg.final_vote} $${msg.position_size?.toFixed(2)}` : 'No trade placed', msg.executed);
+          log(msg.executed ? `✓ Trade executed: ${msg.final_vote} $${msg.position_size?.toFixed(2)}` : `No trade — ${msg.blocked_by || 'n/a'}`, msg.executed);
           break;
 
         case 'metrics':

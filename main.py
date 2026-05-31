@@ -47,6 +47,10 @@ def main():
         # Run the committee
         state = run_committee(query=query, ticker=ticker, config=config)
 
+        # Persist for later outcome scoring (python -m src.core.journal review)
+        from src.core.journal import record_decision
+        record_decision(state)
+
         # Log structured summary to W&B + Weave
         summary = log_debate_summary(state)
         wandb.log({

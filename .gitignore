@@ -1,1 +1,6 @@
 .env
+data/
+wandb/
+__pycache__/
+*.pyc
+.venv/

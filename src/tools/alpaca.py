@@ -82,3 +82,17 @@ def get_clock() -> dict:
     r = requests.get(f"{ALPACA_BASE_URL}/v2/clock", headers=_headers())
     r.raise_for_status()
     return r.json()
+
+
+@weave.op()
+def count_orders_today() -> int:
+    """Number of orders placed since midnight UTC — feeds the daily-trade cap."""
+    from datetime import datetime, timezone
+    start = datetime.now(timezone.utc).strftime("%Y-%m-%dT00:00:00Z")
+    r = requests.get(
+        f"{ALPACA_BASE_URL}/v2/orders",
+        headers=_headers(),
+        params={"status": "all", "after": start, "limit": 500},
+    )
+    r.raise_for_status()
+    return len(r.json())

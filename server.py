@@ -20,6 +20,7 @@ from fastapi.responses import FileResponse, StreamingResponse
 from src.core.orchestrator import run_committee
 from src.core.schemas import CommitteeConfig
 from src.core.evaluation import log_run_to_wandb
+from src.core.journal import record_decision
 from src.agents.intent import parse_intent
 
 load_dotenv(override=True)
@@ -56,6 +57,9 @@ def _committee_stream(ticker: str, query: str, horizon: str, max_position: float
             intent = parse_intent(query, ticker, horizon_override=horizon)
             config = CommitteeConfig(ticker=ticker, max_position_usd=max_position)
             state = run_committee(query=query, ticker=ticker, config=config, emit=emit, intent=intent)
+
+            # Persist the decision for later outcome scoring (the ground-truth loop).
+            record_decision(state)
 
             # Log this run's metrics to W&B (separate from the Weave trace) so live
             # UI runs populate the dashboard too — not just CLI runs.

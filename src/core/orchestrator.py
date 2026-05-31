@@ -1,14 +1,18 @@
 import concurrent.futures
+from dataclasses import replace
 
 import weave
 
 from src.core.config import CONFIG
 from src.core.clock import time_context
+from src.core.guardrails import evaluate as guard_evaluate, gather_inputs
 from src.core.schemas import DebateState, DebateRound, CommitteeConfig, Vote
 from src.tools.market_data import fetch_market_data
 from src.tools.fundamentals import fetch_fundamentals
 from src.tools.news import fetch_news
-from src.tools.alpaca import execute_trade, get_account
+from src.tools.sector import fetch_sector
+from src.tools.macro import fetch_macro
+from src.tools.alpaca import execute_trade
 from src.agents.analyst import PERSONAS, analyst_round
 from src.agents.chair_agent import chair_moderate, chair_decide
 from src.agents.compliance_agent import compliance_agent
@@ -87,16 +91,22 @@ def run_committee(
     })
 
     # ── Step 1b: Deeper research (distinct data the analysts reason over) ───────
-    print("  Pulling fundamentals + news...")
+    print("  Pulling fundamentals, sector, macro, news...")
     fundamentals = fetch_fundamentals(ticker)
+    sector = fetch_sector(ticker)
+    macro = fetch_macro()
     news = fetch_news(ticker)
     research = (
         f"FUNDAMENTALS: {fundamentals['summary']}\n\n"
+        f"SECTOR: {sector['summary']}\n\n"
+        f"MACRO: {macro['summary']}\n\n"
         f"RECENT NEWS:\n{news['summary']}"
     )
     _emit({
         "type": "research",
         "fundamentals": fundamentals["summary"],
+        "sector": sector["summary"],
+        "macro": macro["summary"],
         "news": news["headlines"],
     })
 
@@ -165,9 +175,12 @@ def run_committee(
 
     # ── Step 4: Chair final decision ───────────────────────────────────────────
     print("\n[Decision] Chair finalizing...")
-    final_vote, rationale, position_size = chair_decide(state, config, consensus_vote, directive, time_ctx, research)
+    final_vote, rationale, position_size, conviction = chair_decide(
+        state, config, consensus_vote, directive, time_ctx, research
+    )
     state.final_vote = final_vote
     state.chair_decision = rationale
+    state.conviction = conviction
     state.position_size = position_size
     state.round = DebateRound.REBUTTAL
     print(f"  Decision: {final_vote.value} | ${position_size:.2f}")
@@ -190,57 +203,84 @@ def run_committee(
         "reason": compliance_reason, "position_size": state.position_size,
     })
 
-    # ── Step 6: Execution ──────────────────────────────────────────────────────
+    # ── Step 6: Execution — deterministic guardrails are the final hard gate ───
     print("\n[Execution]")
 
-    def _emit_execution():
+    def _emit_execution(checks=None, blocked_by=None):
         _emit({
             "type": "execution",
             "executed": state.trade_executed,
             "final_vote": state.final_vote.value if state.final_vote else None,
             "position_size": state.position_size,
             "result": state.trade_result,
+            "blocked_by": blocked_by,
+            "guardrails": checks or [],
         })
 
     if not approved:
         print("  Trade blocked by compliance. No order placed.")
         state.trade_executed = False
-        _emit_execution()
+        _emit_execution(blocked_by="compliance")
         return state
 
     if state.final_vote == Vote.HOLD:
         print("  Final vote is HOLD. No order placed.")
         state.trade_executed = False
-        _emit_execution()
+        _emit_execution(blocked_by="hold")
         return state
 
-    side = "buy" if state.final_vote == Vote.BUY else "sell"
-
+    # Deterministic guardrails: market hours, daily cap, conflicting position,
+    # confidence gate, and sizing clamped to the position/portfolio/buying-power
+    # caps. Enforced in code — the LLMs cannot override these.
+    avg_conf = (
+        sum(f.confidence for f in state.transcript[-1]) / len(state.transcript[-1])
+        if state.transcript else 0.0
+    )
+    guard_config = replace(CONFIG, max_position_usd=config.max_position_usd)
     try:
-        account = get_account()
-        buying_power = float(account.get("buying_power", 0))
-        if buying_power < state.position_size:
-            print(f"  Insufficient buying power (${buying_power:.2f}). Skipping trade.")
-            state.trade_executed = False
-            _emit_execution()
-            return state
+        gi = gather_inputs()
+        decision = guard_evaluate(
+            ticker=state.ticker,
+            direction=state.final_vote.value,
+            conviction=conviction,
+            avg_confidence=avg_conf,
+            proposed_notional=state.position_size,
+            account=gi["account"], positions=gi["positions"],
+            clock=gi["clock"], daily_trade_count=gi["daily_trade_count"],
+            config=guard_config,
+        )
     except Exception as e:
-        print(f"  Could not verify account: {e}")
+        print(f"  Could not reach broker for guardrail checks ({e}). Blocking for safety.")
+        state.trade_executed = False
+        _emit_execution(blocked_by="broker_unreachable")
+        return state
 
+    checks = [c.model_dump() for c in decision.checks]
+    for c in decision.checks:
+        print(f"    [{'✓' if c.passed else '✗'}] {c.name}: {c.detail}")
+
+    if not decision.approved:
+        print(f"  ✗ Blocked by guardrail: {decision.blocked_by}")
+        state.position_size = 0.0
+        state.trade_executed = False
+        _emit_execution(checks=checks, blocked_by=decision.blocked_by)
+        return state
+
+    state.position_size = decision.notional_usd  # guardrail-clamped final size
     result = execute_trade(
-        ticker=state.ticker, side=side,
-        notional_usd=state.position_size, rationale=state.chair_decision,
+        ticker=state.ticker, side=decision.side,
+        notional_usd=decision.notional_usd, rationale=state.chair_decision,
     )
     state.trade_result = result
     state.trade_executed = result.get("success", False)
 
     if state.trade_executed:
-        print(f"  ✓ TRADE EXECUTED: {side.upper()} ${state.position_size:.2f} of {ticker}")
+        print(f"  ✓ TRADE EXECUTED: {decision.side.upper()} ${state.position_size:.2f} of {ticker}")
         print(f"  Order ID: {result.get('order_id')}")
     else:
         print(f"  ✗ Trade failed: {result.get('error')}")
 
-    _emit_execution()
+    _emit_execution(checks=checks)
 
     print(f"\n{'='*60}\n  COMMITTEE COMPLETE")
     print(f"  Decision: {state.final_vote.value} | Size: ${state.position_size:.2f} | "

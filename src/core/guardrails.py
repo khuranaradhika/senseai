@@ -111,12 +111,13 @@ def evaluate(
 
 
 def gather_inputs() -> dict:
-    """Fetch the live account/positions/clock the pipeline feeds into evaluate()."""
-    from src.tools.alpaca import get_account, get_positions, get_clock
+    """Fetch the live account/positions/clock/daily-count fed into evaluate()."""
+    from src.tools.alpaca import get_account, get_positions, get_clock, count_orders_today
     return {
         "account": get_account(),
         "positions": get_positions(),
         "clock": get_clock(),
+        "daily_trade_count": count_orders_today(),
     }
 
 

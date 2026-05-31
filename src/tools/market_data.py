@@ -60,11 +60,15 @@ def fetch_market_data(ticker: str) -> MarketData:
 
 
 def _calculate_rsi(prices: pd.Series, period: int = 14) -> Optional[float]:
+    """Canonical RSI using Wilder's smoothing (EMA with alpha=1/period),
+    matching what TradingView and most charting platforms display."""
     try:
         delta = prices.diff()
-        gain = delta.clip(lower=0).rolling(period).mean()
-        loss = (-delta.clip(upper=0)).rolling(period).mean()
-        rs = gain / loss
+        gain = delta.clip(lower=0)
+        loss = -delta.clip(upper=0)
+        avg_gain = gain.ewm(alpha=1 / period, min_periods=period, adjust=False).mean()
+        avg_loss = loss.ewm(alpha=1 / period, min_periods=period, adjust=False).mean()
+        rs = avg_gain / avg_loss
         rsi = 100 - (100 / (1 + rs))
         return float(rsi.iloc[-1])
     except Exception:

@@ -1,0 +1,95 @@
+============================================================
+ INVESTMENT COMMITTEE — SHOWCASE QUERIES & CONFIGURATIONS
+============================================================
+
+HOW TO RUN
+----------
+  UI:   pkill -f server.py; .venv/bin/python server.py    →  http://127.0.0.1:8000
+  CLI:  .venv/bin/python main.py                          (runs a few demo tickers)
+  Test: .venv/bin/python test.py                          (fast checks, no LLM)
+        .venv/bin/python test.py committee NVDA SHORT --quick   (one full debate)
+  Score past calls:  .venv/bin/python -m src.core.journal review
+
+In the UI each run takes 4 inputs:  Ticker · Query · Horizon · Max Buy ($)
+Horizons:  ~1 day (intraday) · ~2 weeks · ~2 months · ~2 years · ~20 years
+
+
+------------------------------------------------------------
+ THE HEADLINE DEMO: same stock, different horizon, different answer
+------------------------------------------------------------
+Run these two back to back — the analysts shift from technicals to fundamentals.
+
+  1) Ticker: NVDA | Horizon: ~1 day (intraday) | Max Buy: 500
+     Query: "Is NVDA a good intraday trade today?"
+     → Expect: weights RSI/MACD/momentum + market-open. Often HOLD/!trade
+       when overbought or market closed.
+
+  2) Ticker: NVDA | Horizon: ~20 years | Max Buy: 500
+     Query: "Is NVDA a strong long-term hold for retirement?"
+     → Expect: weights fundamentals (P/E, growth, margins) + secular AI trend;
+       leans BUY on the cheap forward P/E / high growth, ignores daily noise.
+
+
+------------------------------------------------------------
+ SHOWCASE SCENARIOS
+------------------------------------------------------------
+A) Bull thesis, long horizon
+   Ticker: NVDA | Horizon: ~2 years | Max Buy: 800
+   Query: "Should we take a long position given the AI capex supercycle?"
+
+B) Value / mega-cap, medium horizon
+   Ticker: AAPL | Horizon: ~2 months | Max Buy: 1000
+   Query: "Should we add to our Apple position into the next quarter?"
+
+C) Contrarian / short bias
+   Ticker: TSLA | Horizon: ~2 weeks | Max Buy: 300
+   Query: "Is Tesla a short here after the recent run and macro headwinds?"
+
+D) Sentiment-driven name
+   Ticker: PLTR | Horizon: ~2 months | Max Buy: 250
+   Query: "Is Palantir a buy on the AI/government demand story?"
+
+E) Defensive vs rates
+   Ticker: KO | Horizon: ~2 years | Max Buy: 500
+   Query: "Is Coca-Cola a safe long-term hold in this rate environment?"
+
+F) Small budget, high bar
+   Ticker: MSFT | Horizon: ~2 months | Max Buy: 100
+   Query: "Worth a small starter position in Microsoft?"
+
+
+------------------------------------------------------------
+ WHAT TO WATCH IN THE UI
+------------------------------------------------------------
+- "Understood as" banner: the parsed intent (horizon, direction, risk, catalysts).
+- Research card: Fundamentals / Sector (relative strength) / Macro regime / News.
+- Debate rounds: agents argue, the "↻ changed" tag shows a vote flipping on evidence.
+- Chair moderation card after every round (split vs unanimous).
+- Verdict: "Unanimous after N rounds" vs "Chair tiebreak".
+- Trade card: every guardrail check (✓/✗) and the block reason if not executed.
+- System log: "Logged to W&B ↗ view run" link (metrics dashboard).
+
+
+------------------------------------------------------------
+ EDGE CASES TO DEMONSTRATE GUARDRAILS
+------------------------------------------------------------
+- Market closed (weekend/after hours): any BUY/SELL is blocked by the
+  "market_open" guardrail — shows deterministic safety overriding the LLMs.
+- Tiny Max Buy (e.g. 50): position is clamped to the budget / 10% of equity.
+- Low-conviction debate: blocked by the "confidence_gate" (needs conviction
+  >= 0.70 AND avg analyst confidence >= 0.60).
+- HOLD verdict: no order placed by design.
+
+
+------------------------------------------------------------
+ CONFIG KNOBS (env vars, optional — defaults are sensible)
+------------------------------------------------------------
+  MIN_DEBATE_ROUNDS=4     floor on debate rounds before consensus can end it
+  MAX_DEBATE_ROUNDS=20    hard ceiling on rounds
+  CONVICTION_MIN=0.70     execution confidence gate (chair conviction)
+  AVG_CONF_MIN=0.60       execution confidence gate (avg analyst confidence)
+  MAX_POSITION_USD=1000   global hard position cap (UI "Max Buy" overrides per-run)
+  MAX_PORTFOLIO_PCT=0.10  max fraction of equity per position
+  MAX_DAILY_TRADES=5      daily trade cap
+
+  Example (faster demo):  MIN_DEBATE_ROUNDS=2 .venv/bin/python server.py

@@ -92,7 +92,7 @@ def chair_decide(
     directive: str = "",
     time_ctx: str = "",
     research: str = "",
-) -> tuple[Vote, str, float]:
+) -> tuple[Vote, str, float, float]:
     """
     Final decision. If `consensus_vote` is set the committee was unanimous and the
     Chair ratifies it with a rationale + sizing. Otherwise the debate hit the round
@@ -142,4 +142,4 @@ Respond with a JSON object:
     out = call_typed(system, user, ChairDecision, agent_name="chair_decider", smart=True)
     size = min(float(out.position_size_usd), config.max_position_usd)
     decision = consensus_vote if consensus_vote is not None else Vote(out.decision)
-    return decision, out.rationale, size
+    return decision, out.rationale, size, out.confidence
