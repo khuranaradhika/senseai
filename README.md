@@ -11,7 +11,6 @@ is traced in W&B Weave, logged as W&B metrics, and journaled for later outcome s
 ---
 
 
-[![SenseAI Architecture Diagram](https://github.com/khuranaradhika/senseai/raw/main/architecture-preview.png)](https://github.com/khuranaradhika/senseai/blob/main/SenseAI%20Architecture.pdf)
 
 ## How it works (high level)
 
