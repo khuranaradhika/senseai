@@ -19,6 +19,8 @@ from fastapi.responses import FileResponse, StreamingResponse
 
 from src.core.orchestrator import run_committee
 from src.core.schemas import CommitteeConfig
+from src.core.evaluation import log_run_to_wandb
+from src.agents.intent import parse_intent
 
 load_dotenv(override=True)
 
@@ -39,7 +41,7 @@ def index():
     return FileResponse(INDEX_HTML)
 
 
-def _committee_stream(ticker: str, query: str):
+def _committee_stream(ticker: str, query: str, horizon: str, max_position: float):
     """Run the committee in a worker thread and yield SSE frames as events arrive."""
     events: "queue.Queue" = queue.Queue()
     SENTINEL = object()
@@ -49,14 +51,21 @@ def _committee_stream(ticker: str, query: str):
 
     def worker():
         try:
-            config = CommitteeConfig(
-                ticker=ticker,
-                max_debate_rounds=2,
-                consensus_threshold=3,
-                max_position_usd=1000.0,
-                min_confidence_to_trade=0.6,
-            )
-            run_committee(query=query, ticker=ticker, config=config, emit=emit)
+            # The UI always supplies an explicit horizon, which overrides inference;
+            # the parser still extracts direction/risk/catalysts and the interpretation.
+            intent = parse_intent(query, ticker, horizon_override=horizon)
+            config = CommitteeConfig(ticker=ticker, max_position_usd=max_position)
+            state = run_committee(query=query, ticker=ticker, config=config, emit=emit, intent=intent)
+
+            # Log this run's metrics to W&B (separate from the Weave trace) so live
+            # UI runs populate the dashboard too — not just CLI runs.
+            logged = log_run_to_wandb(state)
+            if logged:
+                events.put({
+                    "type": "metrics",
+                    "scores": logged["scores"],
+                    "wandb_url": logged["wandb_url"],
+                })
         except Exception as e:  # noqa: BLE001
             events.put({"type": "status", "message": f"Error: {e}"})
         finally:
@@ -73,10 +82,17 @@ def _committee_stream(ticker: str, query: str):
 
 
 @app.get("/run")
-def run(ticker: str = "NVDA", query: str = "Should we take a position?"):
+def run(
+    ticker: str = "NVDA",
+    query: str = "Should we take a position?",
+    horizon: str = "MEDIUM",
+    max_position: float = 1000.0,
+):
     ticker = (ticker or "NVDA").strip().upper()
+    # Clamp the user-supplied budget to a sane paper-trading range.
+    max_position = min(max(max_position, 1.0), 1_000_000.0)
     return StreamingResponse(
-        _committee_stream(ticker, query),
+        _committee_stream(ticker, query, horizon, max_position),
         media_type="text/event-stream",
         headers={
             "Cache-Control": "no-cache",

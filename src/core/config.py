@@ -38,6 +38,12 @@ class Config:
     # ── Critic feedback loop ──────────────────────────────────────────────────
     max_critic_rounds: int = _env_int("MAX_CRITIC_ROUNDS", 2)
 
+    # ── Iterative debate ──────────────────────────────────────────────────────
+    # Analysts argue in rounds; debate ends when they are UNANIMOUS, but only
+    # after a floor of MIN rounds, and never beyond a hard ceiling of MAX rounds.
+    min_debate_rounds: int = _env_int("MIN_DEBATE_ROUNDS", 4)
+    max_debate_rounds: int = _env_int("MAX_DEBATE_ROUNDS", 20)
+
     # ── Position / risk limits ────────────────────────────────────────────────
     max_position_usd: float = _env_float("MAX_POSITION_USD", 1000.0)
     max_portfolio_pct: float = _env_float("MAX_PORTFOLIO_PCT", 0.10)  # frac of equity

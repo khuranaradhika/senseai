@@ -1,29 +1,43 @@
 import concurrent.futures
+
 import weave
+
+from src.core.config import CONFIG
+from src.core.clock import time_context
 from src.core.schemas import DebateState, DebateRound, CommitteeConfig, Vote
 from src.tools.market_data import fetch_market_data
+from src.tools.fundamentals import fetch_fundamentals
+from src.tools.news import fetch_news
 from src.tools.alpaca import execute_trade, get_account
-from src.agents.bull_agent import bull_agent
-from src.agents.bear_agent import bear_agent
-from src.agents.risk_agent import risk_agent
-from src.agents.macro_agent import macro_agent
-from src.agents.chair_agent import chair_tiebreak, chair_consensus
+from src.agents.analyst import PERSONAS, analyst_round
+from src.agents.chair_agent import chair_moderate, chair_decide
 from src.agents.compliance_agent import compliance_agent
+from src.agents.intent import parse_intent, intent_directive
+
+ANALYSTS = list(PERSONAS.keys())  # Bull, Bear, Risk, Macro
 
 
 @weave.op()
-def run_committee(query: str, ticker: str, config: CommitteeConfig = None, emit=None) -> DebateState:
+def run_committee(
+    query: str,
+    ticker: str,
+    config: CommitteeConfig = None,
+    emit=None,
+    intent=None,
+) -> DebateState:
     """
-    Main orchestrator. Runs the full investment committee pipeline:
-    1. Fetch market data
-    2. Round 1: Parallel specialist debate
-    3. Round 2: Rebuttals (Bull sees Bear, Bear sees Bull)
-    4. Vote tally → consensus or Chair tiebreak
-    5. Compliance gate
-    6. Alpaca execution (if approved)
+    Iterative, data-driven investment committee:
+    1. Fetch market data.
+    2. Debate in rounds — all 4 analysts argue in parallel, see each other's
+       positions + the Chair's guidance, and may CHANGE their vote each round.
+    3. After every round the Chair (super agent) moderates and tallies. The debate
+       ends when the analysts are UNANIMOUS, but only after a floor of
+       MIN_DEBATE_ROUNDS, and never past MAX_DEBATE_ROUNDS.
+    4. The Chair makes the final call (breaking the tie if no consensus).
+    5. Compliance gate.
+    6. Alpaca execution (if approved).
 
-    `emit`, if provided, is called with dict events as each stage completes,
-    so a frontend (e.g. the SSE server) can stream the debate in real time.
+    `emit`, if provided, streams dict events per step for the live UI.
     """
     def _emit(event: dict):
         if emit is not None:
@@ -32,14 +46,35 @@ def run_committee(query: str, ticker: str, config: CommitteeConfig = None, emit=
     if config is None:
         config = CommitteeConfig(ticker=ticker)
 
-    state = DebateState(ticker=ticker, query=query, market_data=None, round=DebateRound.INITIAL)
+    # ── Step 0: Understand the query ───────────────────────────────────────────
+    # Callers (e.g. the server) may pass a pre-parsed intent; otherwise parse here
+    # so the CLI benefits too.
+    if intent is None:
+        intent = parse_intent(query, ticker)
+    directive = intent_directive(intent)
+    time_ctx = time_context()  # grounds every agent in the present moment
 
-    # ── Step 1: Fetch market data ────────────────────────────────────────────
-    print(f"\n{'='*60}")
-    print(f"  INVESTMENT COMMITTEE: {ticker}")
-    print(f"  Query: {query}")
-    print(f"{'='*60}")
-    print("\n[1/6] Fetching market data...")
+    state = DebateState(
+        ticker=ticker, query=query, market_data=None,
+        round=DebateRound.INITIAL, intent=intent,
+    )
+    print(f"  Intent: {intent.interpretation} "
+          f"[horizon={intent.horizon_bucket or 'UNSPECIFIED'}]")
+    _emit({
+        "type": "intent",
+        "horizon_bucket": intent.horizon_bucket,
+        "horizon_detail": intent.horizon_detail,
+        "horizon_detected": intent.horizon_detected,
+        "direction": intent.direction,
+        "risk_tolerance": intent.risk_tolerance,
+        "catalysts": intent.catalysts,
+        "constraints": intent.constraints,
+        "interpretation": intent.interpretation,
+    })
+
+    # ── Step 1: Market data ────────────────────────────────────────────────────
+    print(f"\n{'='*60}\n  INVESTMENT COMMITTEE: {ticker}\n  Query: {query}\n{'='*60}")
+    print("\n[1] Fetching market data...")
     _emit({"type": "status", "message": "Fetching market data..."})
     state.market_data = fetch_market_data(ticker)
     print(f"  {state.market_data.summary}")
@@ -51,123 +86,112 @@ def run_committee(query: str, ticker: str, config: CommitteeConfig = None, emit=
         "macd": state.market_data.macd_signal,
     })
 
-    # ── Step 2: Round 1 — parallel specialist debate ─────────────────────────
-    print("\n[2/6] Round 1 — Initial positions (parallel)...")
-    _emit({"type": "status", "message": "Round 1 — Initial positions..."})
-    with concurrent.futures.ThreadPoolExecutor(max_workers=4) as executor:
-        bull_future = executor.submit(bull_agent, ticker, query, state.market_data)
-        bear_future = executor.submit(bear_agent, ticker, query, state.market_data)
-        risk_future = executor.submit(risk_agent, ticker, query, state.market_data)
-        macro_future = executor.submit(macro_agent, ticker, query, state.market_data)
-
-        bull_r1 = bull_future.result()
-        bear_r1 = bear_future.result()
-        risk_r1 = risk_future.result()
-        macro_r1 = macro_future.result()
-
-    state.findings = [bull_r1, bear_r1, risk_r1, macro_r1]
-
-    for f in state.findings:
-        print(f"  {f.agent_name}: {f.vote.value} ({f.confidence:.0%}) — {f.thesis[:80]}...")
-        _emit({
-            "type": "finding",
-            "round": 1,
-            "agent": f.agent_name,
-            "vote": f.vote.value,
-            "confidence": f.confidence,
-            "thesis": f.thesis,
-            "key_points": f.key_points,
-        })
-
-    # ── Step 3: Round 2 — rebuttals (Bull vs Bear) ───────────────────────────
-    print("\n[3/6] Round 2 — Rebuttals...")
-    _emit({"type": "status", "message": "Round 2 — Rebuttals..."})
-    with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
-        bull_r2_future = executor.submit(
-            bull_agent, ticker, query, state.market_data, bear_r1.thesis
-        )
-        bear_r2_future = executor.submit(
-            bear_agent, ticker, query, state.market_data, bull_r1.thesis
-        )
-        bull_r2 = bull_r2_future.result()
-        bear_r2 = bear_r2_future.result()
-
-    state.rebuttals = [bull_r2, bear_r2]
-    state.round = DebateRound.REBUTTAL
-
-    for r in state.rebuttals:
-        print(f"  {r.agent_name} rebuttal: {r.vote.value} — {r.rebuttal[:80] if r.rebuttal else ''}...")
-        _emit({
-            "type": "finding",
-            "round": 2,
-            "agent": r.agent_name,
-            "vote": r.vote.value,
-            "confidence": r.confidence,
-            "thesis": r.rebuttal or r.thesis,
-            "key_points": r.key_points,
-        })
-
-    # ── Step 4: Vote tally ────────────────────────────────────────────────────
-    print("\n[4/6] Tallying votes...")
-
-    # Final votes: rebuttals override round 1 for bull/bear; risk/macro keep round 1
-    final_findings = [bull_r2, bear_r2, risk_r1, macro_r1]
-    state.votes = {f.agent_name: f.vote for f in final_findings}
-
-    vote_counts = {}
-    for v in state.votes.values():
-        vote_counts[v.value] = vote_counts.get(v.value, 0) + 1
-
-    print(f"  Vote breakdown: {vote_counts}")
-
-    # Determine consensus
-    winning_vote = max(vote_counts, key=vote_counts.get)
-    winning_count = vote_counts[winning_vote]
-
-    if winning_count >= config.consensus_threshold:
-        # Consensus reached (3:1 or 4:0)
-        print(f"  ✓ Consensus: {winning_vote} ({winning_count}/4 votes)")
-        rationale, position_size = chair_consensus(
-            state, config, Vote(winning_vote), vote_counts
-        )
-        state.final_vote = Vote(winning_vote)
-        state.chair_decision = rationale
-        state.position_size = position_size
-    else:
-        # Split vote (2:2) — Chair breaks tie
-        print(f"  ⚖ Split vote — Chair breaking tie...")
-        final_vote, rationale, position_size = chair_tiebreak(state, config)
-        state.final_vote = final_vote
-        state.chair_decision = rationale
-        state.position_size = position_size
-        print(f"  Chair decision: {final_vote.value}")
-
-    print(f"  Rationale: {state.chair_decision}")
-    print(f"  Proposed position: ${state.position_size:.2f}")
+    # ── Step 1b: Deeper research (distinct data the analysts reason over) ───────
+    print("  Pulling fundamentals + news...")
+    fundamentals = fetch_fundamentals(ticker)
+    news = fetch_news(ticker)
+    research = (
+        f"FUNDAMENTALS: {fundamentals['summary']}\n\n"
+        f"RECENT NEWS:\n{news['summary']}"
+    )
     _emit({
-        "type": "votes",
-        "final_vote": state.final_vote.value,
-        "position_size": state.position_size,
-        "chair_decision": state.chair_decision,
+        "type": "research",
+        "fundamentals": fundamentals["summary"],
+        "news": news["headlines"],
     })
 
-    # ── Step 5: Compliance gate ───────────────────────────────────────────────
-    print("\n[5/6] Compliance check...")
+    # ── Step 2-3: Iterative debate ─────────────────────────────────────────────
+    latest: dict = {}            # agent_name -> most recent AgentFinding
+    chair_note = None
+    consensus_vote: Vote | None = None
+
+    for round_num in range(1, CONFIG.max_debate_rounds + 1):
+        print(f"\n[Round {round_num}] Analysts arguing...")
+        _emit({"type": "round_start", "round": round_num})
+
+        with concurrent.futures.ThreadPoolExecutor(max_workers=len(ANALYSTS)) as ex:
+            futures = {
+                name: ex.submit(
+                    analyst_round, name, ticker, query, state.market_data,
+                    round_num, list(latest.values()), chair_note, latest.get(name),
+                    directive, time_ctx, research,
+                )
+                for name in ANALYSTS
+            }
+            round_findings = [futures[name].result() for name in ANALYSTS]
+
+        state.transcript.append(round_findings)
+        state.rounds_run = round_num
+
+        for f in round_findings:
+            latest[f.agent_name] = f
+            flag = " (changed)" if f.changed_vote else ""
+            print(f"  {f.agent_name}: {f.vote.value} ({f.confidence:.0%}){flag} — {f.thesis[:70]}...")
+            _emit({
+                "type": "finding", "round": round_num, "agent": f.agent_name,
+                "vote": f.vote.value, "confidence": f.confidence, "thesis": f.thesis,
+                "key_points": f.key_points, "changed_vote": f.changed_vote,
+            })
+
+        votes = [f.vote for f in round_findings]
+        vote_counts: dict[str, int] = {}
+        for v in votes:
+            vote_counts[v.value] = vote_counts.get(v.value, 0) + 1
+        unanimous = len(set(votes)) == 1
+        print(f"  Votes: {vote_counts} | unanimous={unanimous}")
+
+        # Active moderation after every round.
+        chair_note = chair_moderate(state, round_findings, round_num, directive, time_ctx, research)
+        state.chair_notes.append(chair_note)
+        print(f"  Chair: {chair_note[:90]}...")
+        _emit({
+            "type": "chair_note", "round": round_num, "note": chair_note,
+            "vote_counts": vote_counts, "unanimous": unanimous,
+        })
+
+        if round_num >= CONFIG.min_debate_rounds and unanimous:
+            consensus_vote = votes[0]
+            state.consensus_reached = True
+            print(f"  ✓ Unanimous consensus: {consensus_vote.value} after {round_num} rounds")
+            break
+        if round_num >= CONFIG.max_debate_rounds:
+            print(f"  ⚠ Round cap ({CONFIG.max_debate_rounds}) reached without consensus")
+            break
+
+    # Backward-compat views for evaluation.py / W&B logging.
+    state.findings = state.transcript[0]
+    state.rebuttals = state.transcript[-1]
+    state.votes = {f.agent_name: f.vote for f in state.transcript[-1]}
+
+    # ── Step 4: Chair final decision ───────────────────────────────────────────
+    print("\n[Decision] Chair finalizing...")
+    final_vote, rationale, position_size = chair_decide(state, config, consensus_vote, directive, time_ctx, research)
+    state.final_vote = final_vote
+    state.chair_decision = rationale
+    state.position_size = position_size
+    state.round = DebateRound.REBUTTAL
+    print(f"  Decision: {final_vote.value} | ${position_size:.2f}")
+    print(f"  Rationale: {rationale}")
+    _emit({
+        "type": "votes", "final_vote": final_vote.value,
+        "position_size": position_size, "chair_decision": rationale,
+        "consensus": state.consensus_reached, "rounds": state.rounds_run,
+    })
+
+    # ── Step 5: Compliance gate ────────────────────────────────────────────────
+    print("\n[Compliance] Checking...")
     approved, compliance_reason, adjusted_size = compliance_agent(state, config)
     state.compliance_approved = approved
     state.compliance_reason = compliance_reason
     state.position_size = adjusted_size
-
     print(f"  {'✓ APPROVED' if approved else '✗ BLOCKED'}: {compliance_reason}")
     _emit({
-        "type": "compliance",
-        "approved": approved,
-        "reason": compliance_reason,
-        "position_size": state.position_size,
+        "type": "compliance", "approved": approved,
+        "reason": compliance_reason, "position_size": state.position_size,
     })
 
-    # ── Step 6: Execute trade ─────────────────────────────────────────────────
-    print("\n[6/6] Execution...")
+    # ── Step 6: Execution ──────────────────────────────────────────────────────
+    print("\n[Execution]")
 
     def _emit_execution():
         _emit({
@@ -179,20 +203,19 @@ def run_committee(query: str, ticker: str, config: CommitteeConfig = None, emit=
         })
 
     if not approved:
-        print(f"  Trade blocked by compliance. No order placed.")
+        print("  Trade blocked by compliance. No order placed.")
         state.trade_executed = False
         _emit_execution()
         return state
 
     if state.final_vote == Vote.HOLD:
-        print(f"  Final vote is HOLD. No order placed.")
+        print("  Final vote is HOLD. No order placed.")
         state.trade_executed = False
         _emit_execution()
         return state
 
     side = "buy" if state.final_vote == Vote.BUY else "sell"
 
-    # Verify account has buying power
     try:
         account = get_account()
         buying_power = float(account.get("buying_power", 0))
@@ -205,12 +228,9 @@ def run_committee(query: str, ticker: str, config: CommitteeConfig = None, emit=
         print(f"  Could not verify account: {e}")
 
     result = execute_trade(
-        ticker=state.ticker,
-        side=side,
-        notional_usd=state.position_size,
-        rationale=state.chair_decision,
+        ticker=state.ticker, side=side,
+        notional_usd=state.position_size, rationale=state.chair_decision,
     )
-
     state.trade_result = result
     state.trade_executed = result.get("success", False)
 
@@ -222,10 +242,9 @@ def run_committee(query: str, ticker: str, config: CommitteeConfig = None, emit=
 
     _emit_execution()
 
-    print(f"\n{'='*60}")
-    print(f"  COMMITTEE COMPLETE")
-    print(f"  Decision: {state.final_vote.value} | Size: ${state.position_size:.2f}")
-    print(f"  Executed: {state.trade_executed}")
-    print(f"{'='*60}\n")
+    print(f"\n{'='*60}\n  COMMITTEE COMPLETE")
+    print(f"  Decision: {state.final_vote.value} | Size: ${state.position_size:.2f} | "
+          f"Rounds: {state.rounds_run} | Consensus: {state.consensus_reached}")
+    print(f"  Executed: {state.trade_executed}\n{'='*60}\n")
 
     return state

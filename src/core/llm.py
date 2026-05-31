@@ -1,11 +1,16 @@
 import os
 import time
+from typing import TypeVar
 
 import requests
 import weave
 from dotenv import load_dotenv
+from pydantic import BaseModel
 
 from src.core.config import CONFIG, FAST_MODEL, SMART_MODEL
+from src.core.parsing import parse_structured
+
+T = TypeVar("T", bound=BaseModel)
 
 load_dotenv(override=True)
 
@@ -78,3 +83,30 @@ def call_llm_structured(system: str, user: str, agent_name: str = "unknown", sma
         lines = clean.split("\n")
         clean = "\n".join(lines[1:-1]) if lines[-1].strip() == "```" else "\n".join(lines[1:])
     return clean.strip()
+
+
+@weave.op()
+def call_typed(
+    system: str,
+    user: str,
+    schema: type[T],
+    *,
+    agent_name: str = "unknown",
+    smart: bool = False,
+) -> T:
+    """
+    LLM call validated into a Pydantic model. On a parse/validation failure it
+    reprompts once with the error appended (see src/core/parsing), then raises a
+    typed StructuredParseError if it still can't comply — so a single bad
+    response never crashes the debate loop.
+    """
+    def _run(extra: str = "") -> str:
+        return call_llm(system=system, user=user + extra, agent_name=agent_name, smart=smart)
+
+    def _reprompt(err: str) -> str:
+        return _run(
+            f"\n\nYour previous response failed validation: {err}\n"
+            "Return ONLY a valid JSON object matching the requested schema — no prose, no markdown."
+        )
+
+    return parse_structured(_run(), schema, reprompt=_reprompt)

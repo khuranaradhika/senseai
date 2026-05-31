@@ -3,7 +3,7 @@ import wandb
 import weave
 from dotenv import load_dotenv
 from src.core.orchestrator import run_committee
-from src.core.evaluation import log_debate_summary, CommitteeEvaluator
+from src.core.evaluation import log_debate_summary
 from src.core.schemas import CommitteeConfig
 
 load_dotenv(override=True)

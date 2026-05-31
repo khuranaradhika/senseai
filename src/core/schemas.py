@@ -28,6 +28,7 @@ class MarketData:
     rsi: Optional[float]
     macd_signal: Optional[str]  # "bullish" | "bearish" | "neutral"
     summary: str
+    as_of: Optional[str] = None  # date of the latest price bar (data freshness)
 
 
 @dataclass
@@ -39,6 +40,22 @@ class AgentFinding:
     vote: Vote
     supporting_data: dict = field(default_factory=dict)
     rebuttal: Optional[str] = None  # populated in round 2
+    round: int = 1
+    changed_vote: bool = False  # did this agent change its vote vs its last round?
+
+
+@dataclass
+class Intent:
+    """Structured understanding of the user's query."""
+    raw_query: str
+    horizon_bucket: Optional[str] = None   # SHORT | MEDIUM | LONG | VERY_LONG
+    horizon_detail: Optional[str] = None   # e.g. "~2 weeks", "about 5 years"
+    horizon_detected: bool = False
+    direction: Optional[str] = None        # long | short | trim | open
+    risk_tolerance: Optional[str] = None   # conservative | moderate | aggressive
+    catalysts: list[str] = field(default_factory=list)
+    constraints: list[str] = field(default_factory=list)
+    interpretation: str = ""               # human-readable one-liner
 
 
 @dataclass
@@ -47,6 +64,14 @@ class DebateState:
     query: str
     market_data: Optional[MarketData]
     round: DebateRound
+    intent: Optional[Intent] = None
+    # Full iterative debate: transcript[i] is the list of findings from round i+1.
+    transcript: list[list[AgentFinding]] = field(default_factory=list)
+    chair_notes: list[str] = field(default_factory=list)  # one moderation note per round
+    rounds_run: int = 0
+    consensus_reached: bool = False
+    # findings = round 1 positions; rebuttals = final round positions (kept for
+    # backward-compat with evaluation.py / W&B logging). votes = final votes.
     findings: list[AgentFinding] = field(default_factory=list)
     rebuttals: list[AgentFinding] = field(default_factory=list)
     votes: dict[str, Vote] = field(default_factory=dict)

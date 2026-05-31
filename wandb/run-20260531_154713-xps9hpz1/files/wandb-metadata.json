@@ -1,0 +1,15 @@
+{
+  "os": "macOS-26.3-arm64-arm-64bit-Mach-O",
+  "python": "CPython 3.13.12",
+  "startedAt": "2026-05-31T19:47:13.521208Z",
+  "program": "<python with no main file>",
+  "git": {
+    "remote": "https://github.com/khuranaradhika/senseai.git",
+    "commit": "8ea954086bba3d141538aae5ed850e444ccc9954"
+  },
+  "email": "mail.radhikakhurana@gmail.com",
+  "root": "/Users/khuranaradhika/senseai",
+  "host": "Radhikas-MacBook-Pro.local",
+  "executable": "/Users/khuranaradhika/senseai/.venv/bin/python",
+  "writerId": "frd2lzfk1b2ylc049f3oezu066xhwlcq"
+}

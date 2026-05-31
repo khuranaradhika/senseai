@@ -119,12 +119,62 @@
 
   .input-row {
     display: grid;
-    grid-template-columns: 160px 1fr auto;
+    grid-template-columns: 100px 1fr 140px 110px auto;
     gap: 12px;
     align-items: end;
   }
 
   .field { display: flex; flex-direction: column; gap: 8px; }
+
+  input[type="number"] {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 14px;
+    padding: 12px 12px;
+    border-radius: 3px;
+    outline: none;
+    width: 100%;
+    transition: border-color 0.2s;
+  }
+  input[type="number"]:focus { border-color: var(--accent); }
+
+  select {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 13px;
+    padding: 12px 10px;
+    border-radius: 3px;
+    outline: none;
+    cursor: pointer;
+    width: 100%;
+    transition: border-color 0.2s;
+  }
+  select:focus { border-color: var(--accent); }
+
+  /* Intent interpretation banner */
+  .intent-banner {
+    display: none;
+    margin-top: 16px;
+    padding: 12px 16px;
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent4);
+    border-radius: 3px;
+    background: rgba(68,136,255,0.05);
+    font-size: 12px;
+    line-height: 1.6;
+    color: #9db8e0;
+  }
+  .intent-banner.visible { display: block; }
+  .intent-banner .ib-label { font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); margin-bottom: 4px; }
+  .intent-tag {
+    display: inline-block; font-size: 10px; letter-spacing: 1px; text-transform: uppercase;
+    padding: 2px 8px; margin-right: 6px; border-radius: 2px;
+    background: rgba(68,136,255,0.15); color: var(--accent4);
+  }
 
   input[type="text"] {
     background: var(--bg);
@@ -515,6 +565,69 @@
     border-radius: 4px;
   }
   .empty-icon { font-size: 32px; margin-bottom: 12px; opacity: 0.3; }
+
+  /* Round divider */
+  .round-divider {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 14px 0 2px;
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--accent4);
+    text-transform: uppercase;
+  }
+  .round-divider::before, .round-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* Chair moderation card */
+  .chair-card {
+    background: rgba(170,68,255,0.06);
+    border: 1px solid rgba(170,68,255,0.25);
+    border-left: 3px solid #aa44ff;
+    border-radius: 4px;
+    padding: 14px 18px;
+    animation: slideIn 0.35s ease;
+  }
+  .chair-card .agent-name { color: #c98bff; }
+  .chair-note { font-size: 12px; line-height: 1.6; color: #b7a3cf; margin-top: 6px; }
+  .consensus-pill {
+    font-size: 9px; letter-spacing: 1px; text-transform: uppercase;
+    padding: 2px 8px; border-radius: 2px; font-weight: 700;
+  }
+  .consensus-pill.yes { background: rgba(0,255,136,0.15); color: var(--accent); }
+  .consensus-pill.no  { background: rgba(255,170,0,0.12); color: var(--accent3); }
+
+  .changed-flag {
+    font-size: 9px; letter-spacing: 1px; color: var(--accent3);
+    border: 1px solid rgba(255,170,0,0.3); border-radius: 2px; padding: 1px 6px;
+  }
+
+  /* Research card (fundamentals + news) */
+  .research-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 16px 24px;
+    margin-bottom: 24px;
+    display: none;
+    animation: fadeIn 0.4s ease;
+  }
+  .research-card.visible { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+  .research-head { font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
+  .research-fund { font-size: 12px; line-height: 1.8; color: #9db8c8; }
+  .research-news { list-style: none; display: flex; flex-direction: column; gap: 6px; }
+  .research-news li {
+    font-size: 11px; color: var(--muted); line-height: 1.5;
+    padding-left: 16px; position: relative;
+  }
+  .research-news li::before { content: '▪'; position: absolute; left: 0; color: var(--accent4); }
+  .research-news .news-meta { color: var(--border); }
+  @media (max-width: 720px) { .research-card.visible { grid-template-columns: 1fr; } }
 </style>
 </head>
 <body>
@@ -541,8 +654,23 @@
         <div class="input-label">Investment Query</div>
         <input type="text" id="queryInput" placeholder="Should we take a long position given the AI capex supercycle thesis?" value="Should we take a long position given the AI capex supercycle thesis?">
       </div>
+      <div class="field">
+        <div class="input-label">Horizon</div>
+        <select id="horizonSelect">
+          <option value="INTRADAY">~1 day (intraday)</option>
+          <option value="SHORT">~2 weeks (short)</option>
+          <option value="MEDIUM" selected>~2 months (medium)</option>
+          <option value="LONG">~2 years (long)</option>
+          <option value="VERY_LONG">~20 years (very long)</option>
+        </select>
+      </div>
+      <div class="field">
+        <div class="input-label">Max Buy ($)</div>
+        <input type="number" id="maxBuyInput" min="1" max="1000000" step="50" value="1000">
+      </div>
       <button class="run-btn" id="runBtn" onclick="runCommittee()">▶ CONVENE</button>
     </div>
+    <div class="intent-banner" id="intentBanner"></div>
   </div>
 
   <!-- Market Strip -->
@@ -569,6 +697,18 @@
     </div>
   </div>
 
+  <!-- Research (fundamentals + news) -->
+  <div class="research-card" id="researchCard">
+    <div class="research-section">
+      <div class="research-head">Fundamentals</div>
+      <div class="research-fund" id="researchFund">—</div>
+    </div>
+    <div class="research-section">
+      <div class="research-head">Recent News</div>
+      <ul class="research-news" id="researchNews"></ul>
+    </div>
+  </div>
+
   <!-- Pipeline -->
   <div class="pipeline" id="pipeline">
     <div class="stage">
@@ -576,15 +716,11 @@
       <div class="stage-arrow"></div>
     </div>
     <div class="stage">
-      <div class="stage-node" id="stage-round1">Round 1</div>
+      <div class="stage-node" id="stage-debate">Debate</div>
       <div class="stage-arrow"></div>
     </div>
     <div class="stage">
-      <div class="stage-node" id="stage-round2">Rebuttals</div>
-      <div class="stage-arrow"></div>
-    </div>
-    <div class="stage">
-      <div class="stage-node" id="stage-vote">Vote</div>
+      <div class="stage-node" id="stage-decision">Decision</div>
       <div class="stage-arrow"></div>
     </div>
     <div class="stage">
@@ -685,7 +821,7 @@
 
   function setStage(stage) {
     // Mark all previous stages as done, current as active
-    const stages = ['market', 'round1', 'round2', 'vote', 'compliance', 'execute'];
+    const stages = ['market', 'debate', 'decision', 'compliance', 'execute'];
     const idx = stages.indexOf(stage);
     stages.forEach((s, i) => {
       const el = document.getElementById(`stage-${s}`);
@@ -693,6 +829,39 @@
       else if (i === idx) el.className = 'stage-node active';
       else el.className = 'stage-node';
     });
+  }
+
+  function addRoundDivider(round) {
+    const feed = document.getElementById('debateFeed');
+    const empty = feed.querySelector('.empty-state');
+    if (empty) empty.remove();
+    const div = document.createElement('div');
+    div.className = 'round-divider';
+    div.textContent = `Round ${round}`;
+    feed.appendChild(div);
+    // Update the Debate pipeline node with the live round number
+    document.getElementById('stage-debate').textContent = `Debate · R${round}`;
+  }
+
+  function addChairNote(data) {
+    const feed = document.getElementById('debateFeed');
+    const card = document.createElement('div');
+    card.className = 'chair-card';
+    const counts = Object.entries(data.vote_counts || {})
+      .map(([k, v]) => `${v}×${k}`).join('  ');
+    card.innerHTML = `
+      <div class="agent-header">
+        <div class="agent-name">⚖ Chair — moderation</div>
+        <div class="agent-meta">
+          <span style="font-size:10px;color:var(--muted)">${counts}</span>
+          <span class="consensus-pill ${data.unanimous ? 'yes' : 'no'}">
+            ${data.unanimous ? 'unanimous' : 'split'}
+          </span>
+        </div>
+      </div>
+      <div class="chair-note">${data.note}</div>
+    `;
+    feed.appendChild(card);
   }
 
   function addAgentCard(data, round) {
@@ -715,6 +884,7 @@
         <div class="agent-name">${data.agent}</div>
         <div class="agent-meta">
           <span class="round-tag">R${round}</span>
+          ${data.changed_vote ? '<span class="changed-flag">↻ changed</span>' : ''}
           <div class="confidence-bar"><div class="confidence-fill" style="width:${confidencePct}%"></div></div>
           <span style="font-size:10px;color:var(--muted)">${confidencePct}%</span>
           <span class="vote-badge vote-${data.vote}">${data.vote}</span>
@@ -733,6 +903,52 @@
     }
   }
 
+  const HORIZON_LABELS = {
+    INTRADAY: '~1 day · intraday', SHORT: '~2 weeks · short', MEDIUM: '~2 months · medium',
+    LONG: '~2 years · long', VERY_LONG: '~20 years · very long',
+  };
+
+  function showIntent(data) {
+    const banner = document.getElementById('intentBanner');
+    // Reflect the chosen horizon (and other intent) back to the user
+    // Pre-fill the dropdown with the inferred horizon so the user sees/overrides it
+    if (data.horizon_bucket) document.getElementById('horizonSelect').value = data.horizon_bucket;
+    const tags = [];
+    if (data.horizon_bucket) tags.push(`<span class="intent-tag">${HORIZON_LABELS[data.horizon_bucket] || data.horizon_bucket}</span>`);
+    if (data.direction) tags.push(`<span class="intent-tag">${data.direction}</span>`);
+    if (data.risk_tolerance) tags.push(`<span class="intent-tag">${data.risk_tolerance} risk</span>`);
+    const extra = [];
+    if (data.catalysts && data.catalysts.length) extra.push(`Catalysts: ${data.catalysts.join(', ')}`);
+    if (data.constraints && data.constraints.length) extra.push(`Constraints: ${data.constraints.join(', ')}`);
+    banner.innerHTML = `
+      <div class="ib-label">Understood as</div>
+      <div>${tags.join('')}</div>
+      <div style="margin-top:6px">${data.interpretation || ''}</div>
+      ${extra.length ? `<div style="margin-top:4px;color:var(--muted);font-size:11px">${extra.join(' · ')}</div>` : ''}
+    `;
+    banner.classList.add('visible');
+  }
+
+  function showResearch(data) {
+    document.getElementById('researchFund').textContent = data.fundamentals || '—';
+    const ul = document.getElementById('researchNews');
+    ul.innerHTML = '';
+    const news = data.news || [];
+    if (!news.length) {
+      const li = document.createElement('li');
+      li.textContent = 'No recent headlines available.';
+      ul.appendChild(li);
+    } else {
+      news.forEach(h => {
+        const li = document.createElement('li');
+        const meta = [h.publisher, h.when].filter(Boolean).join(', ');
+        li.innerHTML = `${h.title}${meta ? ` <span class="news-meta">— ${meta}</span>` : ''}`;
+        ul.appendChild(li);
+      });
+    }
+    document.getElementById('researchCard').classList.add('visible');
+  }
+
   function showVerdict(data) {
     const card = document.getElementById('verdictCard');
     const main = document.getElementById('verdictMain');
@@ -742,7 +958,10 @@
     main.textContent = data.final_vote || '—';
     main.className = `verdict-main ${data.final_vote || ''}`;
     size.textContent = data.position_size ? `$${data.position_size.toFixed(2)}` : '—';
-    rationale.textContent = data.chair_decision || '—';
+    const tag = data.consensus
+      ? `Unanimous after ${data.rounds} rounds`
+      : `Chair tiebreak after ${data.rounds} rounds`;
+    rationale.innerHTML = `<div style="color:var(--accent4);font-size:10px;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px">${tag}</div>${data.chair_decision || '—'}`;
     card.classList.add('visible');
   }
 
@@ -772,6 +991,8 @@
   async function runCommittee() {
     const ticker = document.getElementById('tickerInput').value.trim().toUpperCase() || 'NVDA';
     const query = document.getElementById('queryInput').value.trim() || 'Should we take a position?';
+    const horizon = document.getElementById('horizonSelect').value;
+    const maxBuy = parseFloat(document.getElementById('maxBuyInput').value) || 1000;
     const btn = document.getElementById('runBtn');
     const dot = document.getElementById('statusDot');
 
@@ -780,15 +1001,18 @@
     document.getElementById('verdictCard').classList.remove('visible');
     document.getElementById('tradeCard').classList.remove('visible');
     document.getElementById('marketStrip').classList.remove('visible');
+    document.getElementById('researchCard').classList.remove('visible');
+    document.getElementById('intentBanner').classList.remove('visible');
     document.getElementById('logFeed').innerHTML = '';
     ['Bull Analyst','Bear Analyst','Risk Manager','Macro Strategist'].forEach(a => {
       const el = document.getElementById(`vote-${a}`);
       if (el) { el.textContent = '—'; el.className = 'vote-indicator pending'; }
     });
     // Reset pipeline
-    ['market','round1','round2','vote','compliance','execute'].forEach(s => {
+    ['market','debate','decision','compliance','execute'].forEach(s => {
       document.getElementById(`stage-${s}`).className = 'stage-node';
     });
+    document.getElementById('stage-debate').textContent = 'Debate';
 
     btn.disabled = true;
     btn.textContent = '◌ RUNNING';
@@ -798,7 +1022,7 @@
 
     log(`Convening committee for ${ticker}...`, true);
 
-    const url = `/run?ticker=${encodeURIComponent(ticker)}&query=${encodeURIComponent(query)}`;
+    const url = `/run?ticker=${encodeURIComponent(ticker)}&query=${encodeURIComponent(query)}&horizon=${encodeURIComponent(horizon)}&max_position=${encodeURIComponent(maxBuy)}`;
     eventSource = new EventSource(url);
 
     eventSource.onmessage = (e) => {
@@ -807,9 +1031,23 @@
       switch(msg.type) {
         case 'status':
           log(msg.message);
-          if (msg.message.includes('market')) setStage('market');
-          if (msg.message.includes('Round 1')) setStage('round1');
-          if (msg.message.includes('Round 2')) setStage('round2');
+          if (msg.message.toLowerCase().includes('market')) setStage('market');
+          break;
+
+        case 'intent':
+          showIntent(msg);
+          log(`Query understood — horizon: ${msg.horizon_bucket || 'unspecified'}`, true);
+          break;
+
+        case 'round_start':
+          setStage('debate');
+          addRoundDivider(msg.round);
+          log(`Round ${msg.round} — analysts arguing...`, true);
+          break;
+
+        case 'chair_note':
+          addChairNote(msg);
+          log(`Chair (R${msg.round}): ${msg.unanimous ? 'UNANIMOUS' : 'split'} — ${JSON.stringify(msg.vote_counts)}`);
           break;
 
         case 'market_data':
@@ -830,17 +1068,21 @@
           log(`Market data loaded — $${msg.price?.toFixed(2)}`);
           break;
 
+        case 'research':
+          showResearch(msg);
+          log(`Fundamentals + ${(msg.news || []).length} headlines loaded`);
+          break;
+
         case 'finding':
-          if (msg.round === 1) setStage('round1');
-          if (msg.round === 2) setStage('round2');
+          setStage('debate');
           addAgentCard(msg, msg.round);
-          log(`${msg.agent}: ${msg.vote} (${Math.round(msg.confidence * 100)}%)`);
+          log(`${msg.agent}: ${msg.vote} (${Math.round(msg.confidence * 100)}%)${msg.changed_vote ? ' ↻' : ''}`);
           break;
 
         case 'votes':
-          setStage('vote');
+          setStage('decision');
           showVerdict(msg);
-          log(`Committee verdict: ${msg.final_vote} — $${msg.position_size?.toFixed(2)}`, true);
+          log(`Committee verdict: ${msg.final_vote} — $${msg.position_size?.toFixed(2)} (${msg.consensus ? 'consensus' : 'tiebreak'}, ${msg.rounds} rounds)`, true);
           break;
 
         case 'compliance':
@@ -852,6 +1094,14 @@
           setStage('execute');
           showTrade(msg);
           log(msg.executed ? `✓ Trade executed: ${msg.final_vote} $${msg.position_size?.toFixed(2)}` : 'No trade placed', msg.executed);
+          break;
+
+        case 'metrics':
+          if (msg.wandb_url) {
+            log(`Logged to W&B ↗ <a href="${msg.wandb_url}" target="_blank" style="color:var(--accent4)">view run</a>`, true);
+          } else {
+            log('Metrics computed (W&B logging skipped)');
+          }
           break;
 
         case 'complete':

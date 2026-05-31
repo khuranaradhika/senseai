@@ -25,17 +25,25 @@ def fetch_market_data(ticker: str) -> MarketData:
     # Format RSI safely (handle None)
     rsi_str = f"{rsi:.1f}" if rsi is not None else "N/A"
 
+    # Date of the most recent price bar — tells agents how fresh the data is.
+    try:
+        as_of = hist.index[-1].strftime("%Y-%m-%d") if not hist.empty else None
+    except Exception:
+        as_of = None
+
     summary = (
         f"{ticker} is trading at ${current_price:.2f} "
-        f"({'up' if price_change_pct > 0 else 'down'} {abs(price_change_pct):.1f}% today). "
+        f"({'up' if price_change_pct > 0 else 'down'} {abs(price_change_pct):.1f}% on the day). "
         f"52-week range: ${info.get('fiftyTwoWeekLow', 0):.2f} - ${info.get('fiftyTwoWeekHigh', 0):.2f}. "
         f"Market cap: ${info.get('marketCap', 0)/1e9:.1f}B. "
         f"P/E: {info.get('trailingPE', 'N/A')}. "
         f"RSI: {rsi_str}. "
-        f"MACD: {macd_signal}."
+        f"MACD: {macd_signal}. "
+        f"(Price data as of {as_of or 'unknown'}.)"
     )
 
     return MarketData(
+        as_of=as_of,
         ticker=ticker,
         current_price=current_price,
         price_change_pct=price_change_pct,

@@ -1,7 +1,14 @@
-import json
 import weave
-from src.core.llm import call_llm_structured
+from pydantic import BaseModel, Field
+
+from src.core.llm import call_typed
 from src.core.schemas import DebateState, CommitteeConfig
+
+
+class ComplianceOutput(BaseModel):
+    approved: bool
+    reason: str
+    adjusted_position_usd: float = Field(ge=0.0)
 
 
 @weave.op()
@@ -48,14 +55,8 @@ Check compliance and respond with a JSON object:
 }}
 """
 
-    raw = call_llm_structured(system=system, user=user, agent_name="compliance_agent", smart=True)
-    data = json.loads(raw)
-
-    approved = bool(data["approved"])
-    reason = data["reason"]
-    adjusted = float(data.get("adjusted_position_usd", 0))
+    out = call_typed(system, user, ComplianceOutput, agent_name="compliance_agent", smart=True)
 
     # Hard override: never exceed max position regardless of LLM output
-    adjusted = min(adjusted, config.max_position_usd)
-
-    return approved, reason, adjusted
+    adjusted = min(out.adjusted_position_usd, config.max_position_usd)
+    return out.approved, out.reason, adjusted

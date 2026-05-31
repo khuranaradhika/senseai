@@ -1,0 +1,37 @@
+_wandb:
+    value:
+        cli_version: 0.27.0
+        e:
+            frd2lzfk1b2ylc049f3oezu066xhwlcq:
+                email: mail.radhikakhurana@gmail.com
+                executable: /Users/khuranaradhika/senseai/.venv/bin/python
+                git:
+                    commit: 8ea954086bba3d141538aae5ed850e444ccc9954
+                    remote: https://github.com/khuranaradhika/senseai.git
+                host: Radhikas-MacBook-Pro.local
+                os: macOS-26.3-arm64-arm-64bit-Mach-O
+                program: <python with no main file>
+                python: CPython 3.13.12
+                root: /Users/khuranaradhika/senseai
+                startedAt: "2026-05-31T19:47:13.521208Z"
+                writerId: frd2lzfk1b2ylc049f3oezu066xhwlcq
+        m: []
+        python_version: 3.13.12
+        t:
+            "3":
+                - 2
+                - 16
+            "4": 3.13.12
+            "5": 0.27.0
+            "10":
+                - 20
+            "12": 0.27.0
+            "13": darwin-arm64
+consensus_reached:
+    value: true
+final_vote:
+    value: SELL
+horizon:
+    value: SHORT
+ticker:
+    value: NVDA
