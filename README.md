@@ -1,4 +1,4 @@
-# Autonomous Investment Committee
+# SenseAI
 
 Multi-agent system where AI analysts debate, vote, and execute live paper trades.
 
