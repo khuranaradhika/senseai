@@ -1,4 +1,3 @@
-anthropic
 yfinance
 alpaca-py
 wandb
@@ -10,3 +9,5 @@ ta
 fastapi
 uvicorn[standard]
 httpx
+
+

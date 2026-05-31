@@ -48,7 +48,7 @@ Check compliance and respond with a JSON object:
 }}
 """
 
-    raw = call_llm_structured(system=system, user=user, agent_name="compliance_agent")
+    raw = call_llm_structured(system=system, user=user, agent_name="compliance_agent", smart=True)
     data = json.loads(raw)
 
     approved = bool(data["approved"])

@@ -57,7 +57,7 @@ Respond with a JSON object:
 }}
 """
 
-    raw = call_llm_structured(system=system, user=user, agent_name="chair_agent")
+    raw = call_llm_structured(system=system, user=user, agent_name="chair_agent", smart=True)
     data = json.loads(raw)
 
     return (
@@ -107,7 +107,7 @@ Respond with a JSON object:
 }}
 """
 
-    raw = call_llm_structured(system=system, user=user, agent_name="chair_consensus")
+    raw = call_llm_structured(system=system, user=user, agent_name="chair_consensus", smart=True)
     data = json.loads(raw)
 
     return (

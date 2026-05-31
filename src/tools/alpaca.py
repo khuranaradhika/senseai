@@ -1,9 +1,7 @@
 import os
-from dotenv import load_dotenv
+import requests
 import weave
-from alpaca.trading.client import TradingClient
-from alpaca.trading.enums import OrderSide, OrderType, TimeInForce
-from alpaca.trading.requests import MarketOrderRequest
+from dotenv import load_dotenv
 
 load_dotenv()
 
@@ -12,63 +10,51 @@ ALPACA_API_KEY = os.getenv("ALPACA_API_KEY")
 ALPACA_SECRET_KEY = os.getenv("ALPACA_SECRET_KEY")
 
 
-def _alpaca_client() -> TradingClient:
-    return TradingClient(
-        ALPACA_API_KEY,
-        ALPACA_SECRET_KEY,
-        base_url=ALPACA_BASE_URL,
-    )
-
-
-def _to_dict(obj):
-    if hasattr(obj, "dict"):
-        return obj.dict()
-    if hasattr(obj, "__dict__"):
-        return obj.__dict__
-    return obj
+def _headers():
+    return {
+        "APCA-API-KEY-ID": ALPACA_API_KEY,
+        "APCA-API-SECRET-KEY": ALPACA_SECRET_KEY,
+        "Content-Type": "application/json",
+    }
 
 
 @weave.op()
 def get_account() -> dict:
-    """Get Alpaca paper account info."""
-    account = _alpaca_client().get_account()
-    return _to_dict(account)
+    r = requests.get(f"{ALPACA_BASE_URL}/v2/account", headers=_headers())
+    r.raise_for_status()
+    return r.json()
 
 
 @weave.op()
-def execute_trade(
-    ticker: str,
-    side: str,  # "buy" or "sell"
-    notional_usd: float,
-    rationale: str,
-) -> dict:
-    """
-    Execute a paper trade on Alpaca.
-    Uses notional (dollar amount) ordering so we don't need to calculate shares.
-    """
-    order_request = MarketOrderRequest(
-        symbol=ticker,
-        notional=str(round(notional_usd, 2)),
-        side=OrderSide.BUY if side.lower() == "buy" else OrderSide.SELL,
-        type=OrderType.MARKET,
-        time_in_force=TimeInForce.DAY,
+def execute_trade(ticker: str, side: str, notional_usd: float, rationale: str) -> dict:
+    """Execute a paper trade using Alpaca REST API directly (no SDK dependency)."""
+    payload = {
+        "symbol": ticker,
+        "notional": str(round(notional_usd, 2)),
+        "side": side,
+        "type": "market",
+        "time_in_force": "day",
+    }
+    r = requests.post(
+        f"{ALPACA_BASE_URL}/v2/orders",
+        headers=_headers(),
+        json=payload,
     )
-
-    try:
-        order = _alpaca_client().submit_order(order_data=order_request)
+    if r.status_code in (200, 201):
+        result = r.json()
         return {
             "success": True,
-            "order_id": getattr(order, "id", None),
+            "order_id": result.get("id"),
             "ticker": ticker,
             "side": side,
             "notional_usd": notional_usd,
-            "status": getattr(order, "status", None),
+            "status": result.get("status"),
             "rationale": rationale,
         }
-    except Exception as exc:
+    else:
         return {
             "success": False,
-            "error": str(exc),
+            "error": r.text,
             "ticker": ticker,
             "side": side,
             "notional_usd": notional_usd,
@@ -77,6 +63,6 @@ def execute_trade(
 
 @weave.op()
 def get_positions() -> list:
-    """Get current open positions."""
-    positions = _alpaca_client().get_positions()
-    return [_to_dict(position) for position in positions]
+    r = requests.get(f"{ALPACA_BASE_URL}/v2/positions", headers=_headers())
+    r.raise_for_status()
+    return r.json()
