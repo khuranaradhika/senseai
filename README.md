@@ -6,8 +6,6 @@ Chair synthesizes the call. The decision passes an LLM compliance review and a l
 of **deterministic guardrails** before a live Alpaca **paper** trade fires. Every step
 is traced in W&B Weave, logged as W&B metrics, and journaled for later outcome scoring.
 
-> ⚠️ Research/demo project on **paper trading** only. It is not investment advice and
-> has no proven track record — see [Limitations](#limitations).
 ---
 
 <details>
