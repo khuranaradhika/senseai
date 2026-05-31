@@ -15,7 +15,7 @@ import uvicorn
 import weave
 from dotenv import load_dotenv
 from fastapi import FastAPI
-from fastapi.responses import FileResponse, StreamingResponse
+from fastapi.responses import FileResponse, Response, StreamingResponse
 
 from src.core.orchestrator import run_committee
 from src.core.schemas import CommitteeConfig
@@ -34,12 +34,20 @@ try:
 except Exception as e:  # noqa: BLE001
     print(f"[server] weave.init skipped: {e}")
 
-app = FastAPI(title="Investment Committee")
+app = FastAPI(title="SenseAI")
 
 
 @app.get("/")
 def index():
     return FileResponse(INDEX_HTML)
+
+
+@app.get("/logo.png")
+def logo():
+    path = BASE_DIR / "ui" / "logo.png"
+    if not path.exists():
+        return Response(status_code=404)
+    return FileResponse(path)
 
 
 def _committee_stream(ticker: str, query: str, horizon: str, max_position: float):

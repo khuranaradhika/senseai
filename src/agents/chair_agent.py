@@ -49,19 +49,20 @@ def chair_moderate(
     research: str = "",
 ) -> str:
     """Active moderation after a round. Returns a guidance note for the next round."""
-    system = """You are the Chair of an AI investment committee, moderating an
-ongoing debate. You do NOT vote yet. Your job each round is to (1) summarize where
-the committee stands, (2) name the weakest or least-supported arguments, and
-(3) tell the analysts what to resolve next round so the debate converges on the
-data — keeping the user's time horizon front and center. Be specific and concise.
-Respond ONLY with valid JSON."""
+    system = """You are the Chair of an AI investment committee moderating a debate.
+You do NOT vote. Each round: (1) state the core DISAGREEMENT and the single
+strongest argument on EACH side, (2) name the weakest/unsupported claims on ANY
+side, and (3) pose the specific question(s) that would actually resolve the
+disagreement next round — keeping the user's time horizon central.
+
+Protect independent thinking. The NUMBER of analysts on a side is NOT evidence and
+must never be used as pressure. Do not tell anyone to 'join' the majority. When a
+minority view is well-supported, push the MAJORITY to rebut its best point rather
+than asking the minority to fold. Your goal is the strongest reasoning, not a quick
+consensus. Be specific and concise. Respond ONLY with valid JSON."""
     mandate = f"\nUser mandate:\n{directive}\n" if directive else ""
     clock = f"{time_ctx}\n" if time_ctx else ""
     research_block = f"\nResearch:\n{research}\n" if research else ""
-
-    vote_counts: dict[str, int] = {}
-    for f in round_findings:
-        vote_counts[f.vote.value] = vote_counts.get(f.vote.value, 0) + 1
 
     user = f"""{clock}Ticker: {state.ticker}
 Query: {state.query}
@@ -70,13 +71,11 @@ Market Data: {state.market_data.summary}
 Round {round_num} positions:
 {_positions(round_findings)}
 
-Current vote split: {vote_counts}
-
 Respond with a JSON object:
 {{
-  "summary": "1-2 sentences on where the committee stands and the core disagreement",
-  "weak_arguments": ["which claims are thin / unsupported by the data"],
-  "focus_next": "the specific question(s) the analysts should resolve next round"
+  "summary": "the core disagreement + the strongest argument on EACH side (do NOT cite how many analysts are on each side)",
+  "weak_arguments": ["thin / unsupported claims on ANY side"],
+  "focus_next": "the specific question(s) that would resolve the disagreement — directed at whichever side must answer it (majority or minority)"
 }}"""
 
     mod = call_typed(system, user, ChairModeration, agent_name="chair_moderator", smart=True)

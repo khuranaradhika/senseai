@@ -31,14 +31,23 @@ def fetch_market_data(ticker: str) -> MarketData:
     except Exception:
         as_of = None
 
+    # Position within the 52-week range and volume vs average — fuller price/market
+    # picture. (P/E lives in the fundamentals brief, with forward P/E + PEG context,
+    # so it isn't duplicated and over-anchored here.)
+    low = info.get("fiftyTwoWeekLow", 0) or 0
+    high = info.get("fiftyTwoWeekHigh", 0) or 0
+    range_str = f", {((current_price - low) / (high - low) * 100):.0f}% of 52w range" if high > low else ""
+    vol = info.get("volume", 0) or 0
+    avg_vol = info.get("averageVolume", 0) or 0
+    vol_str = f"{vol/1e6:.1f}M (avg {avg_vol/1e6:.1f}M)" if avg_vol else "n/a"
+
     summary = (
-        f"{ticker} is trading at ${current_price:.2f} "
+        f"{ticker} trading at ${current_price:.2f} "
         f"({'up' if price_change_pct > 0 else 'down'} {abs(price_change_pct):.1f}% on the day). "
-        f"52-week range: ${info.get('fiftyTwoWeekLow', 0):.2f} - ${info.get('fiftyTwoWeekHigh', 0):.2f}. "
+        f"52-week range: ${low:.2f}-${high:.2f}{range_str}. "
+        f"Volume: {vol_str}. "
+        f"RSI: {rsi_str}. MACD: {macd_signal}. "
         f"Market cap: ${info.get('marketCap', 0)/1e9:.1f}B. "
-        f"P/E: {info.get('trailingPE', 'N/A')}. "
-        f"RSI: {rsi_str}. "
-        f"MACD: {macd_signal}. "
         f"(Price data as of {as_of or 'unknown'}.)"
     )
 
