@@ -3,7 +3,7 @@ import requests
 import weave
 from dotenv import load_dotenv
 
-load_dotenv()
+load_dotenv(override=True)
 
 ALPACA_BASE_URL = os.getenv("ALPACA_BASE_URL", "https://paper-api.alpaca.markets")
 ALPACA_API_KEY = os.getenv("ALPACA_API_KEY")

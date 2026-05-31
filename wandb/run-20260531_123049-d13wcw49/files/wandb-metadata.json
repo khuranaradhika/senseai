@@ -1,0 +1,38 @@
+{
+  "os": "macOS-26.3-arm64-arm-64bit-Mach-O",
+  "python": "CPython 3.13.12",
+  "startedAt": "2026-05-31T16:30:49.157962Z",
+  "program": "/Users/khuranaradhika/senseai/main.py",
+  "codePath": "main.py",
+  "codePathLocal": "main.py",
+  "git": {
+    "remote": "https://github.com/khuranaradhika/senseai.git",
+    "commit": "d91feb3d44571a5d1c21f35fa6c78b8f212809df"
+  },
+  "email": "mail.radhikakhurana@gmail.com",
+  "root": "/Users/khuranaradhika/senseai",
+  "host": "Radhikas-MacBook-Pro.local",
+  "executable": "/Users/khuranaradhika/senseai/.venv/bin/python",
+  "cpu_count": 12,
+  "cpu_count_logical": 12,
+  "disk": {
+    "/": {
+      "total": "494384795648",
+      "used": "389695774720"
+    }
+  },
+  "memory": {
+    "total": "25769803776"
+  },
+  "apple": {
+    "name": "Apple M4 Pro",
+    "ecpuCores": 4,
+    "pcpuCores": 8,
+    "gpuCores": 16,
+    "memoryGb": 24,
+    "swapTotalBytes": "5368709120",
+    "ramTotalBytes": "25769803776",
+    "macModel": "Mac16,8"
+  },
+  "writerId": "nbld59du6bvvd5a5xyyq7ccx2rbawjwv"
+}

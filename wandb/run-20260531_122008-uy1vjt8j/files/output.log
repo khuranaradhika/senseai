@@ -1,0 +1,44 @@
+[34m[1mwandb[0m: Initializing weave.
+[2K[?25h
+[36m[1mweave[0m: Logged in as Weights & Biases user: khuranaradhika.
+[36m[1mweave[0m: View Weave data at https://wandb.ai/khuranaradhika-northeastern-university/investment-committee/weave
+Running committee for NVDA...
+
+============================================================
+  INVESTMENT COMMITTEE: NVDA
+  Query: Should we take a long position given AI capex supercycle thesis?
+============================================================
+
+[1/6] Fetching market data...
+[36m[1mweave[0m: 🍩 https://wandb.ai/khuranaradhika-northeastern-university/investment-committee/r/call/019e7ed5-f0b0-7a55-a22c-252474377eb6
+Traceback (most recent call last):
+  File "/Users/khuranaradhika/senseai/main.py", line 70, in <module>
+    main()
+    ~~~~^^
+  File "/Users/khuranaradhika/senseai/main.py", line 45, in main
+    state = run_committee(query=query, ticker=ticker, config=config)
+  File "/Users/khuranaradhika/senseai/.venv/lib/python3.13/site-packages/weave/trace/op.py", line 1309, in wrapper
+    res, _ = _call_sync_func(
+             ~~~~~~~~~~~~~~~^
+        cast(Op[P, R], wrapper), *args, __should_raise=True, **kwargs
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/Users/khuranaradhika/senseai/.venv/lib/python3.13/site-packages/weave/trace/op.py", line 559, in _call_sync_func
+    res = func(*args, **kwargs)
+  File "/Users/khuranaradhika/senseai/src/core/orchestrator.py", line 36, in run_committee
+    state.market_data = fetch_market_data(ticker)
+                        ~~~~~~~~~~~~~~~~~^^^^^^^^
+  File "/Users/khuranaradhika/senseai/.venv/lib/python3.13/site-packages/weave/trace/op.py", line 1309, in wrapper
+    res, _ = _call_sync_func(
+             ~~~~~~~~~~~~~~~^
+        cast(Op[P, R], wrapper), *args, __should_raise=True, **kwargs
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/Users/khuranaradhika/senseai/.venv/lib/python3.13/site-packages/weave/trace/op.py", line 559, in _call_sync_func
+    res = func(*args, **kwargs)
+  File "/Users/khuranaradhika/senseai/src/tools/market_data.py", line 32, in fetch_market_data
+    f"RSI: {rsi:.1f if rsi else 'N/A'}. "
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ValueError: Invalid format specifier '.1f if rsi else 'N/A'' for object of type 'float'

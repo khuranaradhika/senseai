@@ -6,7 +6,7 @@ from src.core.orchestrator import run_committee
 from src.core.evaluation import log_debate_summary, CommitteeEvaluator
 from src.core.schemas import CommitteeConfig
 
-load_dotenv()
+load_dotenv(override=True)
 
 
 def main():

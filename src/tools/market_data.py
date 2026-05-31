@@ -1,3 +1,4 @@
+from typing import Optional
 import yfinance as yf
 import pandas as pd
 from src.core.schemas import MarketData
@@ -21,6 +22,8 @@ def fetch_market_data(ticker: str) -> MarketData:
 
     # MACD signal
     macd_signal = _calculate_macd_signal(hist["Close"])
+    # Format RSI safely (handle None)
+    rsi_str = f"{rsi:.1f}" if rsi is not None else "N/A"
 
     summary = (
         f"{ticker} is trading at ${current_price:.2f} "
@@ -28,7 +31,7 @@ def fetch_market_data(ticker: str) -> MarketData:
         f"52-week range: ${info.get('fiftyTwoWeekLow', 0):.2f} - ${info.get('fiftyTwoWeekHigh', 0):.2f}. "
         f"Market cap: ${info.get('marketCap', 0)/1e9:.1f}B. "
         f"P/E: {info.get('trailingPE', 'N/A')}. "
-        f"RSI: {rsi:.1f if rsi else 'N/A'}. "
+        f"RSI: {rsi_str}. "
         f"MACD: {macd_signal}."
     )
 
@@ -73,6 +76,3 @@ def _calculate_macd_signal(prices: pd.Series) -> str:
         return "neutral"
     except Exception:
         return "neutral"
-
-
-from typing import Optional

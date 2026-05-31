@@ -3,10 +3,10 @@ import requests
 import weave
 from dotenv import load_dotenv
 
-load_dotenv()
+load_dotenv(override=True)
 
 WANDB_API_KEY = os.getenv("WANDB_API_KEY")
-WANDB_BASE_URL = "https://api.wandb.ai/inference/v1"
+WANDB_BASE_URL = "https://api.inference.wandb.ai/v1"#"https://api.wandb.ai/inference/v1"
 
 # Two-tier model routing
 FAST_MODEL = "deepseek/deepseek-v4-flash"       # specialists: cheap + fast
